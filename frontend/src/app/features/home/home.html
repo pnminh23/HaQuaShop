@@ -18,7 +18,8 @@
   </section>
 
   <section aria-labelledby="feat-title" class="reveal block">
-    <div class="head"><div><h2 id="feat-title">Sản phẩm nổi bật</h2><p class="muted">Được khách hàng HaQua đánh giá cao nhất tháng này.</p></div></div>
+    <div class="head"><div><h2 id="feat-title">Sản phẩm nổi bật</h2><p class="muted">Những mẫu máy tính được khách hàng HaQua quan tâm.</p></div>
+      <a routerLink="/san-pham" [queryParams]="{ category: 'may-tinh' }">Xem tất cả máy tính →</a></div>
     <div class="grid-products">
       @for (p of featured(); track p.id) { <app-product-card [product]="p" (add)="add($event)" /> }
     </div>

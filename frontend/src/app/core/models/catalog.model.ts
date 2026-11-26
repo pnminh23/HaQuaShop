@@ -26,6 +26,7 @@ export interface ProductListResponse {
 export interface ProductFilter {
   q?: string;
   category?: string[];
+  brand?: string[];
   priceMin?: number;
   priceMax?: number;
   minRating?: number;
@@ -63,6 +64,12 @@ export interface ProductDetail {
   specs: { key: string; value: string }[];
   seo: { focusKeyword: string; metaTitle: string; metaDescription: string; seoScore: number } | null;
   related: ProductCard[];
+}
+
+/** Một hãng máy tính trên menu cửa hàng. */
+export interface MenuBrand {
+  name: string;
+  slug: string;
 }
 
 export interface Category {

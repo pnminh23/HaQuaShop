@@ -11,7 +11,7 @@ import { HeroSlider } from '../../shared/components/hero-slider';
 import { ProductThumb } from '../../shared/components/product-thumb';
 import { kindOf } from '../../shared/utils/product-kind';
 import { DatePipe } from '@angular/common';
-import { catchError, of } from 'rxjs';
+import { catchError, map, of } from 'rxjs';
 import { Banner } from '../../core/models/banner.model';
 
 @Component({
@@ -32,7 +32,11 @@ export class Home {
     id: 0, title: 'Công nghệ tinh gọn cho nhịp sống xanh', subtitle: 'Máy tính, điện thoại và tai nghe chính hãng được HaQua chọn lọc kỹ — giá minh bạch, giao nhanh, bảo hành tận tâm.',
     imageUrl: '', altText: 'HaQua', linkUrl: '/san-pham', ctaLabel: 'Mua sắm ngay', sortOrder: 0, active: true,
   }];
-  protected readonly featured = toSignal(this.catalog.featured(8), { initialValue: [] });
+  /** Sản phẩm nổi bật chỉ lấy máy tính, xếp theo độ phổ biến. */
+  protected readonly featured = toSignal(
+    this.catalog.products({ category: ['may-tinh'], sort: 'popular' }, 8).pipe(map((r) => r.page.content)),
+    { initialValue: [] },
+  );
   protected readonly posts = toSignal(this.catalog.posts(3), { initialValue: null });
   protected readonly faqs = toSignal(this.catalog.faq(), { initialValue: [] });
   protected readonly openFaq = signal<number | null>(0);

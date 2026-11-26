@@ -19,6 +19,7 @@ import vn.haqua.shop.dto.OrderDtos.OrderTrackingDto;
 import vn.haqua.shop.entity.ChatConversation;
 import vn.haqua.shop.entity.ChatMessage;
 import vn.haqua.shop.entity.ChatbotConfig;
+import vn.haqua.shop.entity.Product;
 import vn.haqua.shop.enums.ChatEnums.*;
 import vn.haqua.shop.exception.ApiException;
 import vn.haqua.shop.mapper.ProductMapper;
@@ -28,6 +29,7 @@ import vn.haqua.shop.repository.ChatbotConfigRepository;
 import vn.haqua.shop.repository.KnowledgeSourceRepository;
 import vn.haqua.shop.repository.ProductRepository;
 import vn.haqua.shop.repository.UserRepository;
+import vn.haqua.shop.service.chat.ReplyGuide;
 import vn.haqua.shop.util.SlugUtil;
 
 /**
@@ -112,13 +114,17 @@ public class ChatbotService {
             return Prepared.answered(state(c));
         }
 
-        var retrieved = retriever.retrieve(req.content());
-        List<LlmClient.Message> history = messages.findByConversationIdOrderByIdAsc(c.getId()).stream()
+        List<ChatMessage> past = messages.findByConversationIdOrderByIdAsc(c.getId());
+        // tìm sản phẩm theo cả mạch hỏi, để "dưới 30 triệu thôi" vẫn nhớ là đang hỏi laptop đồ họa
+        List<String> asked = past.stream().filter(m -> m.getSender() == Sender.USER).map(ChatMessage::getContent).toList();
+        var retrieved = retriever.retrieve(asked.subList(Math.max(0, asked.size() - 8), asked.size()));
+        List<LlmClient.Message> history = past.stream()
                 .map(m -> new LlmClient.Message(m.getSender() == Sender.USER ? "user" : "assistant", m.getContent()))
                 .toList();
         String refs = retrieved.products().stream().map(p -> String.valueOf(p.getId()))
                 .reduce((a, b) -> a + "," + b).orElse(null);
-        return new Prepared(null, c.getId(), systemPrompt(cfg) + "\nNGỮ CẢNH:\n" + retrieved.context(), history, refs);
+        return new Prepared(null, c.getId(), systemPrompt(cfg) + "\nNGỮ CẢNH:\n" + retrieved.context(),
+                ReplyGuide.pin(history, retrieved.products().stream().map(Product::getName).toList()), refs);
     }
 
     private String askLlm(Prepared p) {
@@ -341,7 +347,15 @@ public class ChatbotService {
             case SHORT -> "Trả lời ngắn gọn, đi thẳng vào ý.";
         };
         return "Bạn là " + cfg.getDisplayName() + ", trợ lý bán hàng của HaQua (laptop, điện thoại, tai nghe). " + tone
-                + " Chỉ dựa vào NGỮ CẢNH được cung cấp, không bịa giá hoặc chính sách. "
+                + " Chỉ dựa vào NGỮ CẢNH được cung cấp, không bịa giá, thông số hoặc chính sách. "
+                + "Danh sách sản phẩm trong NGỮ CẢNH chỉ là phần lọc theo câu hỏi, không phải toàn bộ kho: "
+                + "không được nói shop chỉ bán hay chỉ có thông tin về một loại hàng, kể cả khi câu trả lời trước đó từng nói vậy. "
+                + "Khi khách hỏi về sản phẩm và danh sách có sản phẩm thì phải giới thiệu ngay, không hỏi lại trước. "
+                + "Giới thiệu đúng 3 sản phẩm đầu danh sách (ít hơn nếu danh sách ít hơn), giữ nguyên thứ tự, không bao giờ quá 3. "
+                + "Mỗi sản phẩm nêu giá và lý do hợp nhu cầu; chép nguyên văn tên thông số, không tự sửa hay bổ sung; "
+                + "thông số không có thì nói là chưa có thông tin. "
+                + "Khung chat hẹp: trình bày bằng danh sách ngắn, không dùng bảng. "
+                + "Nếu khách chưa nói ngân sách hoặc nhu cầu thì sau khi giới thiệu mới hỏi thêm một câu ngắn. "
                 + (cfg.getExtraInstructions() == null ? "" : cfg.getExtraInstructions());
     }
 

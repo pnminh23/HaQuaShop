@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import vn.haqua.shop.dto.CatalogDtos.*;
 import vn.haqua.shop.dto.PageDto;
+import vn.haqua.shop.entity.Brand;
 import vn.haqua.shop.entity.Category;
 import vn.haqua.shop.entity.Product;
 import vn.haqua.shop.entity.ProductImage;
@@ -115,7 +116,13 @@ public class AdminProductService {
         validate(req, publishing, id);
 
         p.setCategory(category);
-        p.setBrand(req.brand() == null || req.brand().isBlank() ? null : brandService.ensure(req.brand()).getName());
+        Brand brand = req.brand() == null || req.brand().isBlank() ? null : brandService.ensure(req.brand());
+        p.setBrand(brand == null ? null : brand.getName());
+        // hãng mới nhập kèm máy tính thì tự lên menu (trừ khi admin đã tắt)
+        if (brand != null && brand.getComputerBrand() == null && req.status() == ProductStatus.ACTIVE
+                && BrandService.COMPUTER_CATEGORY.equals(category.getSlug())) {
+            brand.setComputerBrand(true);
+        }
         p.rename(req.name());
         p.setDescription(req.description());
         p.setSlug(resolveSlug(req));

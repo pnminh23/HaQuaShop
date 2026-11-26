@@ -14,4 +14,6 @@ public interface BrandRepository extends JpaRepository<Brand, Long> {
     Optional<Brand> findBySlug(String slug);
 
     List<Brand> findAllByOrderByNameAsc();
+
+    List<Brand> findByComputerBrandTrue();
 }

@@ -7,7 +7,7 @@ import { ProductKind } from '../utils/product-kind';
   selector: 'app-product-thumb',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="thumb" [style.background]="tone()" [style.aspect-ratio]="ratio()" [style.border-radius]="radius()">
+    <div class="thumb" [style.background]="src() ? '#fff' : tone()" [style.aspect-ratio]="ratio()" [style.border-radius]="radius()">
       @if (src(); as s) {
         <img [src]="s" [alt]="alt()" loading="lazy" />
       } @else {
@@ -34,8 +34,9 @@ import { ProductKind } from '../utils/product-kind';
     </div>
   `,
   styles: `
-    .thumb { display: flex; align-items: center; justify-content: center; overflow: hidden; width: 100%; }
-    img { width: 100%; height: 100%; object-fit: cover; }
+    .thumb { position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden; width: 100%; }
+    /* ảnh nằm trọn trong khung: absolute để kích thước gốc không kéo giãn khung, contain để không cắt */
+    img { position: absolute; inset: 0; width: 100%; height: 100%; padding: 6%; box-sizing: border-box; object-fit: contain; }
     svg { max-height: 100%; }
   `,
 })

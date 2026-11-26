@@ -69,12 +69,12 @@
         </div>
       }
 
-      @if (pages().length > 1) {
-        <nav class="pager" aria-label="Phân trang">
-          @for (p of pages(); track p) {
-            <button type="button" [class.on]="p === state().page" [attr.aria-current]="p === state().page ? 'page' : null" (click)="goto(p)">{{ p + 1 }}</button>
-          }
-        </nav>
+      @if (hasMore()) {
+        <div class="load-more">
+          <button type="button" class="btn" [disabled]="loading() || loadingMore()" [attr.aria-busy]="loadingMore()" (click)="loadMore()">
+            {{ loadingMore() ? 'Đang tải…' : 'Xem thêm' }}
+          </button>
+        </div>
       }
     </section>
   </div>

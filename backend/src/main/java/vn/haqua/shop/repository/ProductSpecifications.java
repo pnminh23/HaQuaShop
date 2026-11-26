@@ -28,6 +28,9 @@ public final class ProductSpecifications {
             if (f.categories() != null && !f.categories().isEmpty()) {
                 p.add(root.get("category").get("slug").in(f.categories()));
             }
+            if (f.brands() != null && !f.brands().isEmpty()) {
+                p.add(root.get("brand").in(f.brands()));
+            }
             if (f.priceMin() != null) {
                 p.add(cb.greaterThanOrEqualTo(root.get("minPrice"), f.priceMin()));
             }

@@ -213,7 +213,7 @@ public class DataSeeder implements ApplicationRunner {
     /** 3 slide mẫu (ảnh SVG phối màu thương hiệu); admin thay bằng ảnh thật tại /admin/banner. */
     private void seedBanners() {
         String[][] data = {
-            {"Công nghệ tinh gọn cho nhịp sống xanh", "Máy tính, điện thoại và tai nghe chính hãng — giá minh bạch, giao nhanh, bảo hành tận tâm.", "Mua sắm ngay", "/san-pham", "#2c4231", "#4f7355", "laptop"},
+            {"Công nghệ tinh gọn cho nhịp sống xanh", "Máy tính, điện thoại và tai nghe chính hãng — giá minh bạch, giao nhanh, bảo hành tận tâm.", "Xem máy tính", "/san-pham?category=may-tinh", "#2c4231", "#4f7355", "laptop"},
             {"Điện thoại mới, ưu đãi đến 7%", "Nova X 5G cùng loạt điện thoại chính hãng, trả góp 0% qua thẻ tín dụng.", "Xem điện thoại", "/san-pham?category=dien-thoai", "#3e5a43", "#7da07f", "phone"},
             {"Âm thanh trọn vẹn, chống ồn chủ động", "Tai nghe True Wireless và ANC được chọn lọc, đổi trả trong 30 ngày.", "Khám phá tai nghe", "/san-pham?category=tai-nghe", "#34503a", "#a7c3a0", "audio"},
         };

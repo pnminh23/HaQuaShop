@@ -1,14 +1,16 @@
-<div class="page-head"><div><h1>Thương hiệu</h1><p>Danh mục dùng cho ô chọn thương hiệu khi thêm sản phẩm</p></div></div>
+<div class="page-head"><div><h1>Thương hiệu</h1><p>Dùng cho ô chọn thương hiệu khi thêm sản phẩm. Hãng máy tính hiện trên menu cửa hàng theo thứ tự từ nhỏ đến lớn, trùng số thì xếp theo tên. Tải lại trang cửa hàng để thấy thay đổi.</p></div></div>
 
-<form class="card row" style="margin-bottom: 20px" (submit)="$event.preventDefault(); add(nameInput)">
+<form class="card row" style="margin-bottom: 20px" (submit)="$event.preventDefault(); add(nameInput, computerInput)">
   <input #nameInput class="input" style="max-width: 360px" aria-label="Tên thương hiệu mới" placeholder="Tên thương hiệu mới, VD: Sony" maxlength="100" />
+  <label class="row"><input #computerInput type="checkbox" /> Hãng máy tính (hiện trên menu)</label>
   <button type="submit" class="btn primary">Thêm</button>
   @if (error()) { <span class="error-text" animate.enter="fade-down-in">{{ error() }}</span> }
 </form>
 
-<div class="toolbar" style="margin-bottom: 16px"><app-search-box label="Tìm thương hiệu" placeholder="Tên thương hiệu…" (search)="q.set($event)" /></div>
+<div class="toolbar" style="margin-bottom: 16px"><app-search-box label="Tìm thương hiệu" placeholder="Tên thương hiệu…" (search)="q.set($event)" />
+  <label class="row"><input type="checkbox" [checked]="onlyComputer()" (change)="onlyComputer.set($any($event.target).checked)" /> Chỉ hãng máy tính</label></div>
 <div class="card"><div class="table-wrap"><table class="table">
-  <thead><tr><th>Thương hiệu</th><th>Slug</th><th>Sản phẩm</th><th></th></tr></thead>
+  <thead><tr><th>Thương hiệu</th><th>Slug</th><th>Sản phẩm</th><th>Hãng máy tính</th><th>Thứ tự menu</th><th></th></tr></thead>
   <tbody>
     @for (b of shown(); track b.id) {
       <tr>
@@ -20,6 +22,12 @@
         </td>
         <td><small class="muted">{{ b.slug }}</small></td>
         <td>{{ b.productCount }}</td>
+        <td><input #box type="checkbox" [checked]="b.computerBrand" (change)="toggleComputer(b, box)" [attr.aria-label]="'Hiện ' + b.name + ' trên menu máy tính'" /></td>
+        <td>
+          @if (b.computerBrand) {
+            <input #ord class="input" type="number" min="0" step="1" style="width: 90px" [value]="b.menuOrder" (change)="saveOrder(b, ord)" [attr.aria-label]="'Thứ tự menu của ' + b.name" />
+          } @else { <span class="muted">—</span> }
+        </td>
         <td class="row">
           @if (editingId() === b.id) {
             <button type="button" class="btn sm primary" (click)="save(b, draft())">Lưu</button>
@@ -30,5 +38,5 @@
           }
         </td>
       </tr>
-    } @empty { <tr><td colspan="4" class="muted">Chưa có thương hiệu.</td></tr> }
+    } @empty { <tr><td colspan="6" class="muted">Chưa có thương hiệu.</td></tr> }
   </tbody></table></div></div>

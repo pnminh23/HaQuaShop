@@ -15,11 +15,10 @@
 .chips { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 .chip-btn { height: 36px; padding: 0 14px; border-radius: var(--radius-btn); border: 1px solid var(--green-200); background: var(--surface); color: var(--green-700); font-size: 14px; font-weight: 500; cursor: pointer; }
 .empty { text-align: center; display: flex; flex-direction: column; gap: 12px; align-items: center; padding: 56px 24px; border-style: dashed; strong { font-size: 20px; } }
-.pager { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap;
-  button { width: 44px; height: 44px; border-radius: var(--radius-btn); border: 1px solid var(--border); background: var(--surface); cursor: pointer; &.on { background: var(--green-600); color: #fff; border-color: var(--green-600); font-weight: 600; } } }
-.seo-text { margin-top: 48px; display: flex; flex-direction: column; gap: 12px; h2 { font-size: 22px; } p { color: var(--ink-2); line-height: 1.75; font-size: 15px; } }
+/* overflow-anchor: none để trình duyệt không bám vào nút / khối bên dưới rồi tự cuộn theo khi lưới dài thêm. */
+.load-more { display: flex; justify-content: center; overflow-anchor: none; .btn { min-width: 220px; } }
+.seo-text { overflow-anchor: none; margin-top: 48px; display: flex; flex-direction: column; gap: 12px; h2 { font-size: 22px; } p { color: var(--ink-2); line-height: 1.75; font-size: 15px; } }
 
 .chip-btn { transition: background var(--dur-fast), transform var(--dur-fast) var(--ease-out); &:hover { background: var(--green-50); transform: scale(1.04); } }
 .filters .opt { transition: color var(--dur-fast), transform var(--dur-fast) var(--ease-out); &:hover { color: var(--green-700); transform: translateX(2px); } }
-.pager button { transition: background var(--dur-fast), transform var(--dur-fast) var(--ease-out); &:hover:not(.on) { background: var(--green-50); transform: translateY(-2px); } }
 .filters { animation: fade-up var(--dur-slow) var(--ease-out) both; }

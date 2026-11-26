@@ -7,6 +7,7 @@ import { Page } from '../models/common.model';
 import {
   Category,
   Faq,
+  MenuBrand,
   Post,
   ProductCard,
   ProductDetail,
@@ -14,6 +15,8 @@ import {
   ProductListResponse,
   ReviewList,
 } from '../models/catalog.model';
+
+export interface Suggestion { slug: string; name: string; price: number; imageUrl: string | null }
 
 @Injectable({ providedIn: 'root' })
 export class CatalogService {
@@ -23,6 +26,7 @@ export class CatalogService {
     let params = new HttpParams().set('size', size).set('page', filter.page ?? 0).set('sort', filter.sort ?? 'popular');
     if (filter.q) params = params.set('q', filter.q);
     filter.category?.forEach((c) => (params = params.append('category', c)));
+    filter.brand?.forEach((b) => (params = params.append('brand', b)));
     if (filter.priceMin != null) params = params.set('priceMin', filter.priceMin);
     if (filter.priceMax != null) params = params.set('priceMax', filter.priceMax);
     if (filter.minRating != null) params = params.set('minRating', filter.minRating);
@@ -31,19 +35,17 @@ export class CatalogService {
     return this.http.get<ProductListResponse>(`${API_URL}/products`, { params });
   }
 
+  computerBrands(): Observable<MenuBrand[]> {
+    return this.http.get<MenuBrand[]>(`${API_URL}/brands/computers`);
+  }
+
   banners(): Observable<Banner[]> {
     return this.http.get<Banner[]>(`${API_URL}/banners`);
   }
 
-  featured(limit = 8): Observable<ProductCard[]> {
-    return this.http.get<ProductCard[]>(`${API_URL}/products/featured`, { params: { limit } });
-  }
-
-  suggest(q: string): Observable<{ slug: string; name: string; price: number; imageUrl: string | null }[]> {
-    return this.http.get<{ slug: string; name: string; price: number; imageUrl: string | null }[]>(
-      `${API_URL}/products/suggest`,
-      { params: { q } },
-    );
+  /** Gợi ý ngắn cho ô tìm kiếm ở header. */
+  suggest(q: string): Observable<Suggestion[]> {
+    return this.http.get<Suggestion[]>(`${API_URL}/products/suggest`, { params: { q } });
   }
 
   detail(slug: string): Observable<ProductDetail> {

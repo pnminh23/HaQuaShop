@@ -49,7 +49,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/products/*/reviews").authenticated()
                         .requestMatchers("/api/auth/**", "/api/products/**", "/api/categories/**", "/api/posts/**",
                                 "/api/faq", "/api/cart/**", "/api/checkout/**", "/api/orders/**",
-                                "/api/banners", "/api/chat/**", "/api/payments/webhook", "/uploads/**", "/actuator/health").permitAll()
+                                "/api/banners", "/api/brands/**", "/api/chat/**", "/api/payments/webhook", "/uploads/**", "/actuator/health").permitAll()
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(o -> o.jwt(j -> j.jwtAuthenticationConverter(jwtAuthenticationConverter())));
         return http.build();

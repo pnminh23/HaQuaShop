@@ -1,9 +1,6 @@
 .top { display: flex; flex-wrap: wrap; gap: 40px; align-items: flex-start; }
 .gallery { flex: 1 1 480px; min-width: 0; display: flex; flex-direction: column; gap: 14px; }
-.main-img { position: relative; border-radius: 28px; overflow: hidden; border: 1px solid var(--border); }
-.badge { position: absolute; top: 18px; left: 18px; background: var(--accent); color: #fff; font-size: 13px; font-weight: 600; padding: 6px 12px; border-radius: 999px; }
-.thumbs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
-  button { padding: 0; border-radius: 16px; overflow: hidden; cursor: pointer; background: none; border: 1px solid var(--border); &.on { border: 2px solid var(--green-600); } } }
+.badge { z-index: 2; position: absolute; top: 18px; left: 18px; background: var(--accent); color: #fff; font-size: 13px; font-weight: 600; padding: 6px 12px; border-radius: 999px; }
 .buy { flex: 1 1 440px; min-width: 0; display: flex; flex-direction: column; gap: 20px;
   h1 { font-size: 34px; line-height: 1.2; } }
 .eyebrow { font-size: 13px; font-weight: 600; color: var(--green-600); text-transform: uppercase; letter-spacing: .08em; }
@@ -34,11 +31,9 @@ fieldset { border: 0; margin: 0; padding: 0; legend { font-weight: 600; margin-b
 .gal-skel { flex: 1 1 480px; aspect-ratio: 1; border-radius: 28px; }
 .top .buy .skeleton { margin-bottom: 4px; }
 .big { display: inline-block; animation: pop-in var(--dur) var(--ease-spring) both; }
-.thumbs button { transition: transform var(--dur-fast) var(--ease-out), border-color var(--dur-fast); &:hover { transform: translateY(-2px); } }
 .pill { &:hover:not(.on) { transform: translateY(-1px); border-color: var(--green-200); } &:active { transform: scale(.96); } &.on { animation: pop-in var(--dur) var(--ease-spring); } }
 .qty button { transition: background var(--dur-fast), transform var(--dur-fast) var(--ease-out); &:hover { background: var(--green-50); } &:active { transform: scale(.85); } }
 .qty span { display: inline-block; }
 .tablist button { transition: background var(--dur-fast), color var(--dur-fast); &:hover:not([aria-selected='true']) { background: var(--green-50); } }
 .bar .fill { transform-origin: left; animation: grow-x .8s var(--ease-out) both; }
 .review { animation: fade-up var(--dur-slow) var(--ease-out) both; }
-.main-img { transition: box-shadow var(--dur) var(--ease-out); &:hover { box-shadow: 0 16px 40px rgba(44, 66, 49, .14); } }

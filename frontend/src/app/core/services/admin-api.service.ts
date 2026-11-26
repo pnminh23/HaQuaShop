@@ -6,6 +6,7 @@ import {
   AdminProductRequest,
   AdminProductRow,
   Brand,
+  BrandRequest,
   ChatbotConfig,
   ChatStats,
   ConversationDetail,
@@ -90,16 +91,16 @@ export class AdminApiService {
     return this.http.get<Brand[]>(`${this.base}/brands`);
   }
 
-  renameBrand(id: number, name: string): Observable<Brand> {
-    return this.http.put<Brand>(`${this.base}/brands/${id}`, { name });
+  updateBrand(id: number, body: BrandRequest): Observable<Brand> {
+    return this.http.put<Brand>(`${this.base}/brands/${id}`, body);
   }
 
   deleteBrand(id: number): Observable<void> {
     return this.http.delete<void>(`${this.base}/brands/${id}`);
   }
 
-  createBrand(name: string): Observable<Brand> {
-    return this.http.post<Brand>(`${this.base}/brands`, { name });
+  createBrand(name: string, computerBrand?: boolean): Observable<Brand> {
+    return this.http.post<Brand>(`${this.base}/brands`, { name, computerBrand });
   }
 
   categories(): Observable<Category[]> {

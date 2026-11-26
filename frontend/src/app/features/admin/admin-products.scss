@@ -1,5 +1,5 @@
 .variant { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; align-items: end; padding: 12px; border: 1px solid var(--border); border-radius: 16px; }
-.imgrow { display: flex; gap: 10px; align-items: flex-end; img { border-radius: 10px; object-fit: cover; } .grow { flex: 1; } }
+.imgrow { display: flex; gap: 10px; align-items: flex-end; img { border-radius: 10px; object-fit: contain; background: #fff; } .grow { flex: 1; } }
 .upload { cursor: pointer; align-self: flex-start; }
 .serp { display: flex; flex-direction: column; gap: 2px; strong { color: #1a0dab; font-weight: 500; font-size: 18px; } small { color: #1e6f3d; } span { font-size: 14px; color: var(--ink-2); } }
 li { font-size: 14px; color: var(--danger); &.ok { color: var(--green-600); } }

@@ -10,12 +10,11 @@ import { CatalogService } from '../../core/services/catalog.service';
 import { SeoService } from '../../core/services/seo.service';
 import { ToastService } from '../../core/services/toast.service';
 import { ProductCardComponent } from '../../shared/components/product-card';
-import { ProductThumb } from '../../shared/components/product-thumb';
+import { ProductGallery } from './product-gallery';
 import { StarRating } from '../../shared/components/star-rating';
 import { VndPipe } from '../../shared/pipes/vnd.pipe';
 import { kindOf, toneOf } from '../../shared/utils/product-kind';
 import { DatePipe } from '@angular/common';
-import { assetUrl } from '../../core/config/api.config';
 
 type Tab = 'desc' | 'specs' | 'reviews';
 type Loaded = { product: Detail } | { notFound: true } | null;
@@ -24,7 +23,7 @@ type Loaded = { product: Detail } | { notFound: true } | null;
 @Component({
   selector: 'app-product-detail',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, FormsModule, VndPipe, ProductThumb, StarRating, ProductCardComponent, DatePipe],
+  imports: [RouterLink, FormsModule, VndPipe, ProductGallery, StarRating, ProductCardComponent, DatePipe],
   templateUrl: './product-detail.html',
   styleUrl: './product-detail.scss',
 })
@@ -96,10 +95,6 @@ export class ProductDetail {
       this.qty.set(1);
       this.applySeo(p);
     });
-  }
-
-  protected image(i: number): string | null {
-    return assetUrl(this.product()?.images[i]?.url);
   }
 
   protected inc(): void {

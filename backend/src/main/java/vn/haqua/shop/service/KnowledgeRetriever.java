@@ -1,12 +1,14 @@
 package vn.haqua.shop.service;
 
-import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,67 +18,66 @@ import vn.haqua.shop.enums.ChatEnums.KnowledgeType;
 import vn.haqua.shop.enums.ProductStatus;
 import vn.haqua.shop.repository.KnowledgeSourceRepository;
 import vn.haqua.shop.repository.ProductRepository;
-import vn.haqua.shop.util.SlugUtil;
+import vn.haqua.shop.service.chat.ProductAdvisor;
+import vn.haqua.shop.service.chat.ProductAdvisor.Candidate;
+import vn.haqua.shop.service.chat.ProductContext;
 
 /** Lấy ngữ cảnh từ các nguồn kiến thức đang bật: sản phẩm (giá, tồn kho thật), chính sách, FAQ. */
 @Component
 @RequiredArgsConstructor
 public class KnowledgeRetriever {
 
-    private static final Set<String> STOP = Set.of("toi", "minh", "muon", "can", "tim", "mua", "cho", "co", "la",
-            "va", "nao", "gi", "the", "nhe", "duoc", "khong", "mot", "cai", "ban", "tu", "van", "hoi");
-
     private final ProductRepository products;
     private final KnowledgeSourceRepository sources;
+
+    /** Số thẻ sản phẩm hiện dưới câu trả lời; khớp với lời dặn AI giới thiệu tối đa 3 máy theo thứ tự. */
+    private static final int CARDS = 3;
 
     public record Retrieved(String context, List<Product> products) {
     }
 
+    /** @param userMessages các câu khách đã hỏi, cũ trước mới sau; câu cuối là câu đang cần trả lời */
     @Transactional(readOnly = true)
-    public Retrieved retrieve(String question) {
+    public Retrieved retrieve(List<String> userMessages) {
         Set<KnowledgeType> enabled = EnumSet.noneOf(KnowledgeType.class);
         sources.findByEnabledTrue().forEach(s -> enabled.add(s.getType()));
 
         StringBuilder ctx = new StringBuilder();
-        List<Product> matched = new ArrayList<>();
-        String q = SlugUtil.unaccent(question);
+        List<Product> cards = List.of();
 
         if (enabled.contains(KnowledgeType.CATALOG)) {
-            List<String> keywords = java.util.Arrays.stream(q.split("[^a-z0-9]+"))
-                    .filter(w -> w.length() >= 3 && !STOP.contains(w)).toList();
-            for (String k : keywords) {
-                for (Product p : products.findByStatusInAndNameUnaccentContaining(
-                        EnumSet.of(ProductStatus.ACTIVE, ProductStatus.OUT_OF_STOCK), k, PageRequest.of(0, 3))) {
-                    if (matched.stream().noneMatch(m -> m.getId().equals(p.getId())) && matched.size() < 3) {
-                        matched.add(p);
-                    }
-                }
+            Map<Long, Product> byId = products.findByStatusIn(
+                            EnumSet.of(ProductStatus.ACTIVE, ProductStatus.OUT_OF_STOCK), Pageable.unpaged())
+                    .stream().collect(Collectors.toMap(Product::getId, p -> p, (a, b) -> a, LinkedHashMap::new));
+            List<Candidate> catalog = byId.values().stream().map(KnowledgeRetriever::candidate).toList();
+            ProductAdvisor.Advice advice = ProductAdvisor.advise(userMessages, catalog);
+            String text = ProductContext.describe(advice, catalog);
+            if (!text.isEmpty()) {
+                ctx.append(text).append('\n');
             }
-            if (matched.isEmpty() && (q.contains("goi y") || q.contains("tu van") || q.contains("nen mua"))) {
-                matched.addAll(products.findByStatusIn(EnumSet.of(ProductStatus.ACTIVE), PageRequest.of(0, 3,
-                        org.springframework.data.domain.Sort.by("soldCount").descending())));
+            if (advice.productQuestion()) {
+                cards = advice.items().stream().limit(CARDS).map(c -> byId.get(c.id())).toList();
             }
-            matched.forEach(p -> ctx.append("- ").append(p.getName()).append(": ")
-                    .append(String.format("%,d", p.getMinPrice()).replace(',', '.')).append("₫")
-                    .append(p.getTotalStock() > 0 ? " (còn hàng)" : " (hết hàng)").append('\n'));
         }
 
+        // chính sách và FAQ chỉ vài dòng: đưa hết cho trợ lý, lọc theo từ khóa dễ sót ("trả góp" toàn từ ngắn)
         for (KnowledgeType t : List.of(KnowledgeType.POLICY, KnowledgeType.FAQ)) {
-            if (!enabled.contains(t)) {
-                continue;
-            }
-            for (KnowledgeSource s : sources.findByTypeAndEnabledTrue(t)) {
-                if (relevant(q, SlugUtil.unaccent(s.getName() + " " + s.getContent()))) {
-                    ctx.append("- ").append(s.getContent()).append('\n');
-                }
+            if (enabled.contains(t)) {
+                sources.findByTypeAndEnabledTrue(t).forEach(k -> ctx.append("- ").append(k.getContent()).append('\n'));
             }
         }
-        return new Retrieved(ctx.toString().trim(), matched);
+
+        return new Retrieved(ctx.toString().trim(), cards);
     }
 
-    private boolean relevant(String question, String text) {
-        return java.util.Arrays.stream(question.split("[^a-z0-9]+"))
-                .filter(w -> w.length() >= 4 && !STOP.contains(w)).anyMatch(text::contains);
-
+    private static Candidate candidate(Product p) {
+        Map<String, String> specs = new LinkedHashMap<>();
+        p.getSpecs().forEach(s -> {
+            if (s.getSpecKey() != null && s.getSpecValue() != null && !s.getSpecValue().isBlank()) {
+                specs.merge(s.getSpecKey(), s.getSpecValue(), (a, b) -> a + ", " + b);
+            }
+        });
+        return new Candidate(p.getId(), p.getName(), p.getBrand(), p.getCategory().getSlug(), p.getMinPrice(),
+                p.getTotalStock() > 0, p.getSoldCount(), specs);
     }
 }

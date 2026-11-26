@@ -94,4 +94,6 @@ export interface ChatbotConfig {
   sources: { id: number; type: string; name: string; enabled: boolean }[];
 }
 
-export interface Brand { id: number; name: string; slug: string; productCount: number; }
+export interface Brand { id: number; name: string; slug: string; productCount: number; computerBrand: boolean; menuOrder: number; }
+
+export interface BrandRequest { name: string; computerBrand?: boolean; menuOrder?: number; }

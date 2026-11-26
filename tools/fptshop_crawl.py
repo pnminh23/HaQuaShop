@@ -116,6 +116,7 @@ def main():
     ap.add_argument('--sitemap', help='tên sitemap nguồn nếu khác danh mục, vd: phu-kien')
     ap.add_argument('--match', default='', help='chỉ lấy URL chứa chuỗi này, vd: /phu-kien/tai-nghe')
     ap.add_argument('--refill', action='store_true', help='chỉ lấy lại gallery cho dòng CSV hiện có ≤1 ảnh (không duyệt sitemap)')
+    ap.add_argument('--append', action='store_true', help='giữ các dòng CSV đã có, lấy thêm --limit sản phẩm mới')
     ap.add_argument('--limit', type=int, default=30)
     ap.add_argument('--delay', type=float, default=2.5)
     a = ap.parse_args()
@@ -129,12 +130,16 @@ def main():
     urls = [u for u in re.findall(r'<loc>([^<]+)</loc>', sm) if urlparse(u).path.count('/') >= 2 and a.match in u]
     img_dir = OUT / 'images' / a.category
     img_dir.mkdir(parents=True, exist_ok=True)
-    rows, seen = [], set()
+    out = OUT / f'{a.category}.csv'
+    old = list(csv.DictReader(out.open(encoding='utf-8-sig'))) if a.append and out.exists() else []
+    known = {r['source_url'] for r in old}
+    skus = {r['sku_source'] for r in old}
+    rows, seen = [], {r['name'] for r in old}
     try:
         for u in urls:
             if len(rows) >= a.limit:
                 break
-            if not rp.can_fetch(UA, u):
+            if u in known or not rp.can_fetch(UA, u):
                 continue
             time.sleep(a.delay)
             try:
@@ -142,9 +147,9 @@ def main():
                 ld = product_ld(html)
             except urllib.error.URLError as e:
                 print('bỏ qua', u, e); continue
-            if not ld or ld['name'] in seen:
+            if not ld or ld['name'] in seen or (a.append and ld.get('sku', '') in skus):
                 continue
-            seen.add(ld['name'])
+            seen.add(ld['name']); skus.add(ld.get('sku', ''))
             img = ld.get('image'); img = img[0] if isinstance(img, list) else img
             slug = urlparse(u).path.rstrip('/').split('/')[-1]
             locals_ = []
@@ -170,11 +175,10 @@ def main():
     except Stop as e:
         print(e, file=sys.stderr)
     OUT.mkdir(exist_ok=True)
-    out = OUT / f'{a.category}.csv'
     with out.open('w', newline='', encoding='utf-8-sig') as f:
         w = csv.DictWriter(f, fieldnames=['price_ref', 'name', 'brand', 'sku_source', 'source_url', 'image_file', 'image_source', 'images_json', 'specs_json'])
-        w.writeheader(); w.writerows(rows)
-    print('Ghi', len(rows), 'sản phẩm ->', out)
+        w.writeheader(); w.writerows(old + rows)
+    print('Mới', len(rows), '- tổng', len(old) + len(rows), 'sản phẩm ->', out)
 
 
 main()

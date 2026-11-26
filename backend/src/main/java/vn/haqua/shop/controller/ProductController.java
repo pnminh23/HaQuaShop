@@ -22,6 +22,7 @@ public class ProductController {
     @GetMapping
     ProductListResponse list(@RequestParam(required = false) String q,
                              @RequestParam(required = false) List<String> category,
+                             @RequestParam(required = false) List<String> brand,
                              @RequestParam(required = false) Long priceMin,
                              @RequestParam(required = false) Long priceMax,
                              @RequestParam(required = false) Double minRating,
@@ -30,7 +31,7 @@ public class ProductController {
                              @RequestParam(defaultValue = "popular") String sort,
                              @RequestParam(defaultValue = "0") int page,
                              @RequestParam(defaultValue = "12") int size) {
-        return service.search(new ProductFilter(q, category, priceMin, priceMax, minRating, onSale, inStock, sort), page, size);
+        return service.search(new ProductFilter(q, category, priceMin, priceMax, minRating, onSale, inStock, sort, brand), page, size);
     }
 
     @GetMapping("/suggest")

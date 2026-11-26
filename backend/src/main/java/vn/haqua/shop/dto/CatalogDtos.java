@@ -64,9 +64,13 @@ public final class CatalogDtos {
     public record SeoInput(String focusKeyword, String metaTitle, String metaDescription) {
     }
 
-    public record BrandDto(Long id, String name, String slug, long productCount) {}
+    public record BrandDto(Long id, String name, String slug, long productCount, boolean computerBrand, int menuOrder) {}
 
-    public record BrandRequest(@NotBlank String name) {}
+    /** computerBrand / menuOrder bỏ trống = giữ nguyên. */
+    public record BrandRequest(@NotBlank String name, Boolean computerBrand, @Min(0) Integer menuOrder) {}
+
+    /** Một mục hãng máy tính trên menu cửa hàng. */
+    public record MenuBrandDto(String name, String slug) {}
 
     public record AdminProductRequest(@NotBlank String name, @NotNull Long categoryId, String brand,
                                       String description, @NotNull ProductStatus status, String slug,

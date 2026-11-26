@@ -19,16 +19,36 @@
       <span>Ha<b>Qua</b></span>
     </a>
 
+    <!-- Đọc thẳng sự kiện input, không dùng ngModel: ngModel chờ bộ gõ tiếng Việt (ibus, Unikey…) chốt chữ rồi mới
+         cập nhật, nên gõ xong khung kết quả không hiện cho tới khi bấm ra chỗ khác -->
     <form class="search" role="search" (submit)="$event.preventDefault(); search()">
       <input type="search" aria-label="Tìm kiếm sản phẩm" placeholder="Tìm laptop, điện thoại, tai nghe…"
-             [ngModel]="query()" (ngModelChange)="onType($event)" name="q" autocomplete="off" />
+             [value]="query()" (input)="onType($any($event.target).value)" name="q" autocomplete="off"
+             (focus)="reopen()" (click)="reopen()" (keydown.arrowdown)="move(1, $event)" (keydown.arrowup)="move(-1, $event)" (keydown.escape)="$event.preventDefault(); close()" />
       <button type="submit" class="btn primary sm">Tìm kiếm</button>
-      @if (suggestions().length) {
-        <ul class="suggest" role="listbox" animate.enter="fade-down-in" animate.leave="fade-out">
-          @for (s of suggestions(); track s.slug) {
-            <li><button type="button" role="option" (click)="pick(s.slug)">{{ s.name }}<span>{{ s.price | vnd }}</span></button></li>
+      @if (quick(); as r) {
+        <div class="suggest" animate.enter="fade-down-in" animate.leave="fade-out">
+          @if (r.items === null) {
+            <p class="note" role="status">Đang tìm…</p>
+          } @else if (r.failed) {
+            <p class="note" role="status">Chưa tải được kết quả, bấm Enter để thử lại.</p>
+          } @else if (!r.items.length) {
+            <p class="note" role="status">Không có sản phẩm khớp “{{ query() }}”.</p>
+          } @else {
+            <ul role="listbox" aria-label="Kết quả nhanh">
+              @for (s of r.items; track s.slug) {
+                <li>
+                  <button type="button" role="option" [class.on]="active() === $index" [attr.aria-selected]="active() === $index" (click)="pick(s.slug)">
+                    @if (asset(s.imageUrl); as src) { <img [src]="src" alt="" width="44" height="44" /> }
+                    <span class="name">{{ s.name }}</span>
+                    <span class="cost">{{ s.price | vnd }}</span>
+                  </button>
+                </li>
+              }
+            </ul>
+            <button type="submit" class="all">Xem tất cả kết quả cho “{{ query().trim() }}” →</button>
           }
-        </ul>
+        </div>
       }
     </form>
 
@@ -50,14 +70,14 @@
     </div>
   </div>
 
-  <nav class="inner nav" aria-label="Danh mục chính">
+  <nav class="inner nav" aria-label="Hãng máy tính">
+    <!-- Trang chủ và Khuyến mãi để cố định ngoài @for: danh sách hãng về trễ lúc hydration không làm đảo thứ tự menu -->
     <ul>
-      @for (n of nav; track n.label) {
-        <li>
-          <a [routerLink]="n.link" [queryParams]="n.query" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: n.exact }"
-             [class.sale]="n.label === 'Khuyến mãi'">{{ n.label }}</a>
-        </li>
+      <li><a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Trang chủ</a></li>
+      @for (b of computerBrands(); track b.slug) {
+        <li><a routerLink="/san-pham" [queryParams]="{ category: 'may-tinh', brand: b.name }" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: false }">{{ b.name }}</a></li>
       }
+      <li><a routerLink="/san-pham" [queryParams]="{ onSale: 'true' }" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: false }" class="sale">Khuyến mãi</a></li>
     </ul>
   </nav>
 </header>

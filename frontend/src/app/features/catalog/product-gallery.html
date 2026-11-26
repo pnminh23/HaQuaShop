@@ -1,0 +1,44 @@
+<div class="stage" tabindex="0" role="group" aria-roledescription="carousel" [attr.aria-label]="'Ảnh ' + name()"
+     (keydown.arrowleft)="$event.preventDefault(); step(-1)" (keydown.arrowright)="$event.preventDefault(); step(1)"
+     (pointerdown)="swipeStart($event)" (pointerup)="swipeEnd($event)" (pointercancel)="swipeEnd($event)" (dragstart)="$event.preventDefault()">
+  <div class="track" [style.transform]="'translateX(' + -100 * index() + '%)'">
+    @for (img of slides(); track $index) {
+      <div class="slide" [attr.aria-hidden]="index() !== $index">
+        <app-product-thumb [kind]="kind()" [imageUrl]="img?.url" [alt]="img?.altText || name()" [tone]="tone()" radius="0" size="42%" />
+      </div>
+    }
+  </div>
+  <ng-content />
+  @if (many()) {
+    <button type="button" class="arrow prev" aria-label="Ảnh trước" (click)="step(-1)">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
+    </button>
+    <button type="button" class="arrow next" aria-label="Ảnh tiếp theo" (click)="step(1)">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg>
+    </button>
+    <span class="counter" aria-live="polite">{{ index() + 1 }} / {{ images().length }}</span>
+  }
+</div>
+
+@if (many()) {
+  <div class="strip-wrap">
+    <div #strip class="strip" role="group" aria-label="Chọn ảnh" (scroll)="measure()">
+      @for (img of images(); track $index) {
+        <button type="button" [class.on]="index() === $index" [attr.aria-pressed]="index() === $index"
+                [attr.aria-label]="'Xem ảnh ' + ($index + 1)" (click)="index.set($index)">
+          <app-product-thumb [kind]="kind()" [imageUrl]="img.url" [alt]="img.altText" radius="0" size="60%" />
+        </button>
+      }
+    </div>
+    @if (canBack()) {
+      <button type="button" class="arrow small prev" aria-label="Cuộn ảnh nhỏ sang trái" (click)="page(-1)">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
+      </button>
+    }
+    @if (canForward()) {
+      <button type="button" class="arrow small next" aria-label="Cuộn ảnh nhỏ sang phải" (click)="page(1)">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg>
+      </button>
+    }
+  </div>
+}

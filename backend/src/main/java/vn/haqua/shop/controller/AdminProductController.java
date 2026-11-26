@@ -41,12 +41,12 @@ public class AdminProductController {
     @PostMapping("/brands")
     @ResponseStatus(HttpStatus.CREATED)
     BrandDto createBrand(@Valid @RequestBody BrandRequest req) {
-        return brandService.create(req.name());
+        return brandService.create(req);
     }
 
     @PutMapping("/brands/{id}")
-    BrandDto renameBrand(@PathVariable Long id, @Valid @RequestBody BrandRequest req) {
-        return brandService.rename(id, req.name());
+    BrandDto updateBrand(@PathVariable Long id, @Valid @RequestBody BrandRequest req) {
+        return brandService.update(id, req);
     }
 
     @DeleteMapping("/brands/{id}")

@@ -1,5 +1,7 @@
 package vn.haqua.shop.service;
 
+import java.util.Comparator;
+import java.util.EnumSet;
 import java.util.List;
 
 import lombok.RequiredArgsConstructor;
@@ -7,7 +9,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import vn.haqua.shop.dto.CatalogDtos.BrandDto;
+import vn.haqua.shop.dto.CatalogDtos.BrandRequest;
+import vn.haqua.shop.dto.CatalogDtos.MenuBrandDto;
 import vn.haqua.shop.entity.Brand;
+import vn.haqua.shop.enums.ProductStatus;
 import vn.haqua.shop.exception.ApiException;
 import vn.haqua.shop.repository.BrandRepository;
 import vn.haqua.shop.repository.ProductRepository;
@@ -17,6 +22,8 @@ import vn.haqua.shop.util.SlugUtil;
 @Service
 @RequiredArgsConstructor
 public class BrandService {
+
+    public static final String COMPUTER_CATEGORY = "may-tinh";
 
     private final BrandRepository brands;
     private final ProductRepository products;
@@ -44,24 +51,51 @@ public class BrandService {
     }
 
     @Transactional
-    public BrandDto create(String name) {
-        Brand b = ensure(name);
+    public BrandDto create(BrandRequest req) {
+        Brand b = ensure(req.name());
+        configure(b, req);
         return toDto(b, products.countByBrand(b.getName()));
     }
 
-    private BrandDto toDto(Brand b) {
-        return new BrandDto(b.getId(), b.getName(), b.getSlug(), 0);
+    /** Các hãng máy tính hiện trên menu cửa hàng. */
+    @Transactional(readOnly = true)
+    public List<MenuBrandDto> computerMenu() {
+        return brands.findByComputerBrandTrue().stream()
+                .sorted(Comparator.comparingInt(BrandService::order).thenComparing(Brand::getName, String.CASE_INSENSITIVE_ORDER))
+                .map(b -> new MenuBrandDto(b.getName(), b.getSlug()))
+                .toList();
+    }
+
+    /** Hãng chưa cấu hình mà đang có máy tính bán thì tự bật; lựa chọn của admin (bật/tắt) được giữ nguyên. */
+    @Transactional
+    public void detectComputerBrands() {
+        for (String name : products.findDistinctBrands()) {
+            Brand b = ensure(name);
+            if (b.getComputerBrand() == null && products.existsByBrandAndCategorySlugAndStatusIn(
+                    b.getName(), COMPUTER_CATEGORY, EnumSet.of(ProductStatus.ACTIVE, ProductStatus.OUT_OF_STOCK))) {
+                b.setComputerBrand(true);
+            }
+        }
+    }
+
+    private static int order(Brand b) {
+        return b.getMenuOrder() == null ? 0 : b.getMenuOrder();
+    }
+
+    private void configure(Brand b, BrandRequest req) {
+        if (req.computerBrand() != null) b.setComputerBrand(req.computerBrand());
+        if (req.menuOrder() != null) b.setMenuOrder(req.menuOrder());
     }
 
     private BrandDto toDto(Brand b, long count) {
-        return new BrandDto(b.getId(), b.getName(), b.getSlug(), count);
+        return new BrandDto(b.getId(), b.getName(), b.getSlug(), count, Boolean.TRUE.equals(b.getComputerBrand()), order(b));
     }
 
-    /** Đổi tên thương hiệu và cập nhật tên trên mọi sản phẩm đang dùng nó. */
+    /** Sửa thương hiệu; đổi tên thì cập nhật tên trên mọi sản phẩm đang dùng nó. */
     @Transactional
-    public BrandDto rename(Long id, String rawName) {
+    public BrandDto update(Long id, BrandRequest req) {
         Brand b = brands.findById(id).orElseThrow(() -> ApiException.notFound("Thương hiệu không tồn tại"));
-        String name = rawName == null ? "" : rawName.trim().replaceAll("\\s+", " ");
+        String name = req.name() == null ? "" : req.name().trim().replaceAll("\\s+", " ");
         if (name.isEmpty()) throw ApiException.badRequest("Tên thương hiệu không được để trống");
         if (name.length() > 100) throw ApiException.badRequest("Tên thương hiệu tối đa 100 ký tự");
         brands.findByNameIgnoreCase(name).filter(o -> !o.getId().equals(id))
@@ -71,6 +105,7 @@ public class BrandService {
             products.findByBrand(old).forEach(p -> p.setBrand(name));
             b.setName(name);
         }
+        configure(b, req);
         return toDto(b, products.countByBrand(name));
     }
 

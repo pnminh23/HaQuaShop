@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { map, switchMap, tap } from 'rxjs';
+import { EMPTY, Subject, catchError, exhaustMap, map, scan, startWith, switchMap, tap } from 'rxjs';
 import { ProductCard, ProductFilter, ProductListResponse } from '../../core/models/catalog.model';
 import { CartService } from '../../core/services/cart.service';
 import { CatalogService } from '../../core/services/catalog.service';
@@ -16,6 +16,8 @@ const PRICE_RANGES: Record<string, { label: string; min?: number; max?: number }
   m15: { label: '15 – 25 triệu', min: 15_000_000, max: 25_000_000 },
   o25: { label: 'Trên 25 triệu', min: 25_000_000 },
 };
+
+const PAGE_SIZE = 20;
 
 const SORTS = [
   { value: 'popular', label: 'Phổ biến nhất' },
@@ -52,23 +54,52 @@ export class ProductList {
     return {
       q: p?.get('q') ?? '',
       categories: p?.getAll('category') ?? [],
+      brands: p?.getAll('brand') ?? [],
       price: p?.get('price') ?? 'any',
       top: p?.get('top') === '1',
       sale: p?.get('onSale') === 'true' || p?.get('sale') === '1',
       sort: p?.get('sort') ?? 'popular',
-      page: Number(p?.get('page') ?? 0),
     };
   });
 
   protected readonly loading = signal(false);
+  protected readonly loadingMore = signal(false);
   protected readonly version = signal(0);
+  private readonly more$ = new Subject<void>();
 
+  /** Đổi bộ lọc thì tải lại từ đầu; "Xem thêm" chỉ nối trang kế vào danh sách, không đổi URL nên giữ nguyên vị trí cuộn. */
   protected readonly result = toSignal<ProductListResponse | null>(
     this.route.queryParamMap.pipe(
       map(() => this.toFilter()),
-      tap(() => this.loading.set(true)),
-      switchMap((f) => this.catalog.products(f)),
-      tap(() => { this.version.update((v) => v + 1); this.loading.set(false); }),
+      tap(() => { this.loading.set(true); this.loadingMore.set(false); }),
+      switchMap((filter) => {
+        let nextPage = 0;
+        return this.more$.pipe(
+          startWith(undefined),
+          // exhaustMap: bấm liên tục khi đang tải sẽ không gọi trùng trang.
+          exhaustMap(() => {
+            if (nextPage > 0) this.loadingMore.set(true);
+            return this.catalog.products({ ...filter, page: nextPage }, PAGE_SIZE).pipe(
+              catchError((e) => {
+                this.loading.set(false);
+                this.loadingMore.set(false);
+                this.toast.show(e.error?.detail ?? 'Không tải được sản phẩm');
+                return EMPTY;
+              }),
+            );
+          }),
+          tap(() => {
+            if (nextPage++ === 0) this.version.update((v) => v + 1);
+            this.loading.set(false);
+            this.loadingMore.set(false);
+          }),
+          scan(
+            (all: ProductListResponse | null, next: ProductListResponse) =>
+              all ? { ...next, page: { ...next.page, content: [...all.page.content, ...next.page.content] } } : next,
+            null,
+          ),
+        );
+      }),
     ),
     { initialValue: null },
   );
@@ -76,7 +107,7 @@ export class ProductList {
   protected readonly categoryOptions = toSignal(this.catalog.categories(), { initialValue: [] });
   protected readonly list = computed(() => this.result()?.page.content ?? []);
   protected readonly facets = computed(() => this.result()?.categoryFacets ?? {});
-  protected readonly pages = computed(() => Array.from({ length: this.result()?.page.totalPages ?? 0 }, (_, i) => i));
+  protected readonly hasMore = computed(() => this.list().length < (this.result()?.page.totalElements ?? 0));
 
   protected readonly chips = computed(() => {
     const s = this.state();
@@ -84,6 +115,7 @@ export class ProductList {
     s.categories.forEach((c) =>
       chips.push({ label: this.categoryOptions().find((o) => o.slug === c)?.name ?? c, remove: { category: s.categories.filter((x) => x !== c) } }),
     );
+    s.brands.forEach((b) => chips.push({ label: `Hãng: ${b}`, remove: { brand: s.brands.filter((x) => x !== b) } }));
     if (s.price !== 'any') chips.push({ label: PRICE_RANGES[s.price]?.label ?? '', remove: { price: null } });
     if (s.top) chips.push({ label: 'Từ 4,7 sao', remove: { top: null } });
     if (s.sale) chips.push({ label: 'Đang giảm giá', remove: { onSale: null, sale: null } });
@@ -112,8 +144,8 @@ export class ProductList {
     void this.router.navigate([], { relativeTo: this.route, queryParams: {} });
   }
 
-  protected goto(page: number): void {
-    void this.router.navigate([], { relativeTo: this.route, queryParams: { page: page || null }, queryParamsHandling: 'merge' });
+  protected loadMore(): void {
+    this.more$.next();
   }
 
   protected add(p: ProductCard): void {
@@ -130,12 +162,12 @@ export class ProductList {
     return {
       q: s.q || undefined,
       category: s.categories,
+      brand: s.brands,
       priceMin: range.min,
       priceMax: range.max,
       minRating: s.top ? 4.7 : undefined,
       onSale: s.sale || undefined,
       sort: s.sort,
-      page: s.page,
     };
   }
 }
