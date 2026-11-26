@@ -1,0 +1,31 @@
+<div class="page-head"><div><h1>Đơn hàng</h1><p>Xử lý đơn từ website, chatbot AI và cửa hàng</p></div></div>
+<div class="toolbar"><app-search-box label="Tìm đơn hàng" placeholder="Mã đơn, tên khách, SĐT…" (search)="search($event)" /></div>
+
+<div class="card" style="margin-top: 16px">
+  <div class="table-wrap"><table class="table">
+    <thead><tr><th>Mã đơn</th><th>Khách hàng</th><th>Thời gian</th><th>Kênh</th><th>Tổng</th><th>Thanh toán</th><th appFilter label="Trạng thái" [options]="statusOptions" [value]="tab()" (valueChange)="setTab($event)"></th></tr></thead>
+    <tbody>
+      @for (o of result()?.content ?? []; track o.id) {
+        <tr [rowLink]="['/admin/don-hang', o.id]"><td><button type="button" class="link" (click)="open(o)">{{ o.code }}</button></td><td>{{ o.receiverName }}</td><td>{{ o.createdAt | date: 'dd/MM HH:mm' }}</td><td>{{ o.channel }}</td>
+          <td>{{ o.total | vnd }}</td><td>{{ o.paymentStatus === 'PAID' ? 'Đã trả' : o.paymentStatus === 'REFUNDED' ? 'Hoàn tiền' : 'Chưa trả' }}</td>
+          <td><span class="chip" [class]="'status-' + o.status">{{ label(o.status) }}</span></td></tr>
+      } @empty { <tr><td colspan="7" class="muted">Không có đơn hàng.</td></tr> }
+    </tbody></table></div>
+  @if ((result()?.totalPages ?? 0) > 1) {
+    <div class="row" style="margin-top: 12px">
+      <button type="button" class="btn sm" [disabled]="page() === 0" (click)="goto(page() - 1)">Trước</button>
+      <span class="muted">Trang {{ page() + 1 }} / {{ result()?.totalPages }}</span>
+      <button type="button" class="btn sm" [disabled]="page() + 1 >= (result()?.totalPages ?? 0)" (click)="goto(page() + 1)">Sau</button>
+    </div>
+  }
+</div>
+
+@if (selected(); as o) {
+  <div class="drawer" animate.enter="drawer-in" animate.leave="drawer-out" (click)="selected.set(null)">
+    <section class="panel" (click)="$event.stopPropagation()" aria-labelledby="od-title">
+      <div class="row between"><div><h2 id="od-title">Đơn {{ o.code }}</h2><span class="muted">{{ o.createdAt | date: 'dd/MM/yyyy HH:mm' }} · Kênh: {{ o.channel }}</span></div>
+        <button type="button" class="btn sm" (click)="selected.set(null)" aria-label="Đóng">✕</button></div>
+      <app-order-view [order]="o" (changed)="updated($event)" />
+    </section>
+  </div>
+}

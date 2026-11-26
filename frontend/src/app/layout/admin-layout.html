@@ -1,0 +1,24 @@
+<div class="shell" [class.collapsed]="collapsed()">
+  <aside class="side anim-fade-in" [attr.aria-label]="'Thanh bên quản trị'">
+    <div class="top-row">
+      <a routerLink="/admin" class="brand"><strong>{{ collapsed() ? 'H' : 'HaQua' }}</strong><span class="brand-sub">Trang quản trị</span></a>
+      <button type="button" class="collapse" (click)="toggle()" [attr.aria-expanded]="!collapsed()" [attr.aria-label]="collapsed() ? 'Mở rộng thanh bên' : 'Thu gọn thanh bên'" [attr.title]="collapsed() ? 'Mở rộng' : 'Thu gọn'">{{ collapsed() ? '»' : '«' }}</button>
+    </div>
+    <nav aria-label="Điều hướng quản trị">
+      @for (g of visibleGroups(); track g.title) {
+        <h2>{{ g.title }}</h2>
+        @for (n of g.items; track n.link) {
+          <a [routerLink]="n.link" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: n.link === '/admin' }" [attr.title]="collapsed() ? n.label : null" [attr.aria-label]="n.label">
+            <span class="ico" aria-hidden="true">{{ initial(n.label) }}</span><span class="lbl">{{ n.label }}</span>
+          </a>
+        }
+      }
+    </nav>
+    <div class="foot">
+      <a routerLink="/" [attr.title]="collapsed() ? 'Xem cửa hàng' : null"><span class="ico" aria-hidden="true">←</span><span class="lbl">Xem cửa hàng</span></a>
+      <div class="me"><strong>{{ auth.user()?.fullName }}</strong><span>{{ auth.user()?.role }}</span></div>
+      <button type="button" class="btn sm block" (click)="auth.logout()" aria-label="Đăng xuất"><span class="lbl">Đăng xuất</span><span class="ico" aria-hidden="true">⎋</span></button>
+    </div>
+  </aside>
+  <main class="content"><router-outlet /></main>
+</div>

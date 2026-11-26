@@ -1,0 +1,87 @@
+<main class="container">
+  <nav class="breadcrumb" aria-label="Breadcrumb">
+    <ol><li><a routerLink="/">Trang chủ</a></li><li aria-hidden="true">/</li><li aria-current="page">Tất cả sản phẩm</li></ol>
+  </nav>
+
+  <div class="head">
+    <div>
+      <h1>Tất cả sản phẩm</h1>
+      <p class="muted">Laptop, điện thoại và tai nghe chính hãng — so sánh giá, lọc theo nhu cầu và nhận tư vấn từ trợ lý AI.</p>
+    </div>
+    <div class="sort">
+      <span class="muted"><strong>{{ result()?.page?.totalElements ?? 0 }}</strong> sản phẩm</span>
+      <label class="field">Sắp xếp
+        <select [value]="state().sort" (change)="setParams({ sort: $any($event.target).value })">
+          @for (s of sorts; track s.value) { <option [value]="s.value" [selected]="state().sort === s.value">{{ s.label }}</option> }
+        </select>
+      </label>
+    </div>
+  </div>
+
+  <div class="layout">
+    <aside class="card filters" aria-label="Bộ lọc sản phẩm">
+      <div class="row"><h2>Bộ lọc</h2><button type="button" class="link" (click)="clearAll()">Xóa tất cả</button></div>
+      <fieldset>
+        <legend>Danh mục</legend>
+        @for (c of categoryOptions(); track c.id) {
+          <label class="opt"><input type="checkbox" [checked]="state().categories.includes(c.slug)" (change)="toggleCategory(c.slug)" />
+            <span>{{ c.name }}</span><small>{{ facets()[c.slug] ?? 0 }}</small></label>
+        }
+      </fieldset>
+      <fieldset>
+        <legend>Khoảng giá</legend>
+        @for (k of priceKeys; track k) {
+          <label class="opt"><input type="radio" name="price" [checked]="state().price === k" (change)="setParams({ price: k === 'any' ? null : k })" />{{ priceLabel(k) }}</label>
+        }
+      </fieldset>
+      <fieldset>
+        <legend>Khác</legend>
+        <label class="opt"><input type="checkbox" [checked]="state().top" (change)="setParams({ top: state().top ? null : 1 })" />Đánh giá từ 4,7 sao</label>
+        <label class="opt"><input type="checkbox" [checked]="state().sale" (change)="setParams({ onSale: state().sale ? null : 'true', sale: null })" />Đang giảm giá</label>
+      </fieldset>
+    </aside>
+
+    <section aria-label="Danh sách sản phẩm" class="results">
+      @if (chips().length) {
+        <div class="chips">
+          <span class="muted">Đang lọc:</span>
+          @for (c of chips(); track c.label) {
+            <button type="button" class="chip-btn" animate.enter="pop-in" animate.leave="fade-out" (click)="setParams(c.remove)" [attr.aria-label]="'Bỏ lọc ' + c.label">{{ c.label }} ✕</button>
+          }
+        </div>
+      }
+
+      @if (result() === null) {
+        <div class="grid-products" aria-busy="true" aria-label="Đang tải sản phẩm">
+          @for (n of skeleton; track n) { <div class="skeleton" style="height: 400px"></div> }
+        </div>
+      } @else if (list().length) {
+        @for (v of [version()]; track v) {
+          <div class="grid-products" [class.is-loading]="loading()">
+            @for (p of list(); track p.id) { <app-product-card [product]="p" (add)="add($event)" /> }
+          </div>
+        }
+      } @else {
+        <div class="empty card anim-pop">
+          <strong>Không có sản phẩm phù hợp</strong>
+          <span class="muted">Thử bỏ bớt bộ lọc hoặc hỏi trợ lý AI để được gợi ý.</span>
+          <button type="button" class="btn" (click)="clearAll()">Xóa bộ lọc</button>
+        </div>
+      }
+
+      @if (pages().length > 1) {
+        <nav class="pager" aria-label="Phân trang">
+          @for (p of pages(); track p) {
+            <button type="button" [class.on]="p === state().page" [attr.aria-current]="p === state().page ? 'page' : null" (click)="goto(p)">{{ p + 1 }}</button>
+          }
+        </nav>
+      }
+    </section>
+  </div>
+
+  <section class="seo-text card" aria-labelledby="seo-title">
+    <h2 id="seo-title">Mua thiết bị điện tử chính hãng tại HaQua</h2>
+    <p>HaQua cung cấp laptop cho học tập, văn phòng và đồ họa; điện thoại từ tầm trung đến flagship; tai nghe chống ồn, true wireless và thể thao. Mỗi sản phẩm đều có thông số chi tiết, đánh giá thật từ khách hàng và chính sách đổi trả 30 ngày.</p>
+    <p>Bạn có thể lọc theo danh mục, khoảng giá, đánh giá; hoặc nhờ trợ lý AI so sánh giúp. Đơn từ 500.000₫ được miễn phí giao hàng, hỗ trợ trả góp 0% khi thanh toán.</p>
+  </section>
+</main>

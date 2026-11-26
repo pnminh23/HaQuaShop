@@ -1,0 +1,6 @@
+:host { display: block; }
+.stack { gap: 18px; }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 18px; .grow { flex: 1; }
+  /* trang chi tiết: ghim đáy khung nhìn; âm lề để bù padding 22px của .card bao ngoài */
+  &.sticky { position: sticky; bottom: 0; z-index: 5; margin: 24px -22px -22px; padding: 14px 22px; background: var(--surface); border-top: 1px solid var(--border);
+    border-radius: 0 0 var(--radius) var(--radius); box-shadow: 0 -6px 16px rgba(24, 33, 27, .06); } }

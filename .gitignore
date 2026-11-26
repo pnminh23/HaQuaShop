@@ -1,0 +1,15 @@
+node_modules/
+dist/
+target/
+.angular/
+uploads/
+*.log
+.idea/
+.vscode/
+.env
+!.env.example
+
+# env từng phần
+backend/.env
+frontend/.env
+!.env.example

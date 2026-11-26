@@ -1,0 +1,32 @@
+<main class="container narrow">
+  <h1>Tra cứu đơn hàng</h1>
+  <form class="card form anim-fade-up" (submit)="$event.preventDefault(); search()">
+    <label class="field">Mã đơn hàng<input name="code" [(ngModel)]="code" placeholder="HQ-261124-AB12" required /></label>
+    <label class="field">Số điện thoại đặt hàng<input name="phone" [(ngModel)]="phone" placeholder="09xx xxx xxx" required /></label>
+    <button type="submit" class="btn primary">Tra cứu</button>
+    @if (error()) { <span class="error-text" role="alert" animate.enter="fade-down-in">{{ error() }}</span> }
+  </form>
+
+  @if (order(); as o) {
+    <section class="card result" animate.enter="fade-down-in" animate.leave="fade-out" aria-label="Kết quả tra cứu">
+      <div class="top"><div><h2>Đơn {{ o.code }}</h2><span class="muted">{{ o.createdAt | date: 'dd/MM/yyyy HH:mm' }}</span></div>
+        <span class="chip" [class.danger]="o.status === 'CANCELLED'">{{ label(o.status) }}</span></div>
+      <p class="muted">{{ o.receiverName }} · {{ o.maskedPhone }} · {{ o.maskedAddress }}</p>
+      <ol class="timeline">
+        @for (h of o.timeline; track h.changedAt; let i = $index) { <li [style.--i]="i"><strong>{{ label(h.toStatus) }}</strong><span class="muted">{{ h.changedAt | date: 'dd/MM HH:mm' }} {{ h.note ? '· ' + h.note : '' }}</span></li> }
+      </ol>
+      <ul class="items">@for (i of o.items; track i.productName) { <li><span>{{ i.productName }} <small class="muted">{{ i.variantLabel }} × {{ i.qty }}</small></span><strong>{{ i.lineTotal | vnd }}</strong></li> }</ul>
+      <div class="foot"><span>Thanh toán: {{ o.paymentMethod }} · {{ o.paymentStatus === 'PAID' ? 'Đã thanh toán' : o.paymentStatus === 'REFUNDED' ? 'Đã hoàn tiền' : 'Chưa thanh toán' }}</span><strong>{{ o.total | vnd }}</strong></div>
+      @if (o.cancellable) { <button type="button" class="btn danger sm" (click)="cancel(o)">Hủy đơn</button> }
+    </section>
+  }
+
+  @if (auth.isLoggedIn() && mine().length) {
+    <section class="mine">
+      <h2>Đơn hàng của tôi</h2>
+      @for (o of mine(); track o.code) {
+        <button type="button" class="card row" (click)="order.set(o)"><strong>{{ o.code }}</strong><span>{{ label(o.status) }}</span><span>{{ o.total | vnd }}</span></button>
+      }
+    </section>
+  }
+</main>

@@ -1,0 +1,10 @@
+.card-product { transition: transform var(--dur) var(--ease-out), box-shadow var(--dur) var(--ease-out); &:hover { transform: translateY(-4px); box-shadow: 0 14px 32px rgba(44, 66, 49, .14); } }
+.card-product { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; display: flex; flex-direction: column; height: 100%; }
+.media { position: relative; display: block; }
+.badge { position: absolute; top: 12px; left: 12px; background: var(--accent); color: #fff; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 999px; &.new { background: var(--green-600); } }
+.body { padding: 16px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+.cat { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--green-600); }
+h3 { font-size: 16px; line-height: 1.4; font-weight: 600; a { color: var(--ink); text-decoration: none; &:hover { color: var(--green-600); } } }
+.price-row { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-top: auto; .price { font-size: 18px; } }
+
+.badge { animation: pop-in var(--dur) var(--ease-spring) .2s both; }

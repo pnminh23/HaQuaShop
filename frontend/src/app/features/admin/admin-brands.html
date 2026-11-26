@@ -1,0 +1,34 @@
+<div class="page-head"><div><h1>Thương hiệu</h1><p>Danh mục dùng cho ô chọn thương hiệu khi thêm sản phẩm</p></div></div>
+
+<form class="card row" style="margin-bottom: 20px" (submit)="$event.preventDefault(); add(nameInput)">
+  <input #nameInput class="input" style="max-width: 360px" aria-label="Tên thương hiệu mới" placeholder="Tên thương hiệu mới, VD: Sony" maxlength="100" />
+  <button type="submit" class="btn primary">Thêm</button>
+  @if (error()) { <span class="error-text" animate.enter="fade-down-in">{{ error() }}</span> }
+</form>
+
+<div class="toolbar" style="margin-bottom: 16px"><app-search-box label="Tìm thương hiệu" placeholder="Tên thương hiệu…" (search)="q.set($event)" /></div>
+<div class="card"><div class="table-wrap"><table class="table">
+  <thead><tr><th>Thương hiệu</th><th>Slug</th><th>Sản phẩm</th><th></th></tr></thead>
+  <tbody>
+    @for (b of shown(); track b.id) {
+      <tr>
+        <td>
+          @if (editingId() === b.id) {
+            <input class="input" style="max-width: 280px" [value]="draft()" maxlength="100" aria-label="Tên thương hiệu"
+              (input)="draft.set($any($event.target).value)" (keyup.enter)="save(b, draft())" (keyup.escape)="editingId.set(null)" />
+          } @else { <strong>{{ b.name }}</strong> }
+        </td>
+        <td><small class="muted">{{ b.slug }}</small></td>
+        <td>{{ b.productCount }}</td>
+        <td class="row">
+          @if (editingId() === b.id) {
+            <button type="button" class="btn sm primary" (click)="save(b, draft())">Lưu</button>
+            <button type="button" class="btn sm" (click)="editingId.set(null)">Hủy</button>
+          } @else {
+            <button type="button" class="btn sm" (click)="startEdit(b)">Đổi tên</button>
+            <button type="button" class="btn sm danger" [disabled]="b.productCount > 0" [attr.title]="b.productCount > 0 ? 'Đang được dùng bởi sản phẩm' : null" (click)="remove(b)">Xóa</button>
+          }
+        </td>
+      </tr>
+    } @empty { <tr><td colspan="4" class="muted">Chưa có thương hiệu.</td></tr> }
+  </tbody></table></div></div>

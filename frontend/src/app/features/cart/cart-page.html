@@ -1,0 +1,91 @@
+<main class="container">
+  <nav class="breadcrumb" aria-label="Breadcrumb"><ol><li><a routerLink="/">Trang chủ</a></li><li aria-hidden="true">/</li><li aria-current="page">Giỏ hàng</li></ol></nav>
+  <div class="head">
+    <h1>Giỏ hàng <span class="muted">({{ cart().itemCount }})</span></h1>
+    <ol class="steps" aria-label="Các bước đặt hàng"><li class="on"><span>1</span>Giỏ hàng</li><li><span>2</span>Thanh toán</li><li><span>3</span>Hoàn tất</li></ol>
+  </div>
+
+  @if (!cart().items.length) {
+    <div class="card empty anim-pop">
+      <h2>Giỏ hàng đang trống</h2>
+      <p class="muted">Khám phá sản phẩm hoặc hỏi trợ lý AI để được gợi ý phù hợp.</p>
+      <a routerLink="/san-pham" class="btn primary">Tiếp tục mua sắm</a>
+    </div>
+  } @else {
+    <div class="layout">
+      <section aria-label="Sản phẩm trong giỏ" class="items">
+        <div class="card ship anim-fade-up">
+          @if (cart().summary.subtotal >= freeShipThreshold) { <span>🎉 Bạn được miễn phí giao hàng!</span> }
+          @else { <span>Mua thêm <strong>{{ freeShipThreshold - cart().summary.subtotal | vnd }}</strong> để được miễn phí giao hàng</span> }
+          <div class="progress" role="progressbar" aria-label="Tiến độ miễn phí giao hàng" aria-valuemin="0" aria-valuemax="100" [attr.aria-valuenow]="shipProgress()"><div [style.width.%]="shipProgress()"></div></div>
+        </div>
+
+        @if (cart().notice) { <div class="card notice" role="status" animate.enter="fade-down-in" animate.leave="fade-out">{{ cart().notice }}</div> }
+
+        <div class="card">
+          <div class="bulk">
+            <label><input type="checkbox" [checked]="allChecked()" (change)="toggleAll()" /> Chọn tất cả ({{ active().length }})</label>
+            <button type="button" class="link" (click)="removeSelected()">Xóa mục đã chọn</button>
+          </div>
+          <ul>
+            @for (it of active(); track it.id) {
+              <li class="line" animate.enter="fade-down-in" animate.leave="line-out">
+                <input type="checkbox" [checked]="it.selected" (change)="toggle(it)" [attr.aria-label]="'Chọn ' + it.name" />
+                <a [routerLink]="['/san-pham', it.productSlug]" class="thumb"><app-product-thumb [imageUrl]="it.imageUrl" [alt]="it.name" radius="16px" size="60%" /></a>
+                <div class="info">
+                  <a [routerLink]="['/san-pham', it.productSlug]">{{ it.name }}</a>
+                  @if (it.variantLabel) { <span class="muted">{{ it.variantLabel }}</span> }
+                  <div class="acts">
+                    <button type="button" class="link" (click)="saveForLater(it, true)">Lưu để mua sau</button>
+                    <button type="button" class="link" (click)="remove(it)">Xóa</button>
+                  </div>
+                </div>
+                <div class="qty" role="group" [attr.aria-label]="'Số lượng ' + it.name">
+                  <button type="button" (click)="setQty(it, it.qty - 1)" aria-label="Giảm">−</button><span>{{ it.qty }}</span><button type="button" (click)="setQty(it, it.qty + 1)" aria-label="Tăng">+</button>
+                </div>
+                <div class="amt"><strong>{{ it.lineTotal | vnd }}</strong>@if (it.originalPrice) { <s class="old-price">{{ it.originalPrice * it.qty | vnd }}</s> }</div>
+              </li>
+            }
+          </ul>
+          <a routerLink="/san-pham" class="back">← Tiếp tục mua sắm</a>
+        </div>
+
+        @if (saved().length) {
+          <div class="card">
+            <h2>Để mua sau ({{ saved().length }})</h2>
+            <ul>
+              @for (it of saved(); track it.id) {
+                <li class="line simple" animate.enter="fade-down-in" animate.leave="line-out"><span>{{ it.name }} <span class="muted">{{ it.variantLabel }}</span></span>
+                  <button type="button" class="btn sm" (click)="saveForLater(it, false)">Thêm lại vào giỏ</button></li>
+              }
+            </ul>
+          </div>
+        }
+      </section>
+
+      <aside aria-label="Tóm tắt đơn hàng" class="card summary anim-fade-up" style="--i:2">
+        <h2>Tóm tắt đơn hàng</h2>
+        <form (submit)="$event.preventDefault(); applyCoupon()">
+          <label for="coupon">Mã giảm giá</label>
+          <div class="row">
+            <input id="coupon" class="input" name="code" [ngModel]="code()" (ngModelChange)="code.set($event)" placeholder="Thử HAQUA10" />
+            <button type="submit" class="btn">Áp dụng</button>
+          </div>
+          @if (couponMsg()) { <span role="status" class="msg" animate.enter="fade-down-in">{{ couponMsg() }}</span> }
+        </form>
+        <dl>
+          <div><dt>Tạm tính ({{ cart().summary.selectedCount }} dòng)</dt><dd>{{ cart().summary.subtotal | vnd }}</dd></div>
+          @if (cart().summary.productDiscount) { <div><dt>Đã tiết kiệm từ giá gốc</dt><dd class="green">−{{ cart().summary.productDiscount | vnd }}</dd></div> }
+          @if (cart().summary.couponCode) {
+            <div><dt>Mã {{ cart().summary.couponCode }} <button type="button" class="link" (click)="removeCoupon()">Gỡ</button></dt><dd class="green">−{{ cart().summary.couponDiscount | vnd }}</dd></div>
+          }
+          <div><dt>Phí vận chuyển</dt><dd>{{ cart().summary.shippingFee ? (cart().summary.shippingFee | vnd) : 'Miễn phí' }}</dd></div>
+          <div class="total"><dt>Tổng thanh toán</dt><dd>{{ cart().summary.total | vnd }}</dd></div>
+        </dl>
+        <span class="muted small">Đã bao gồm VAT</span>
+        <a routerLink="/thanh-toan" class="btn primary block" [class.disabled]="!cart().summary.selectedCount" [attr.aria-disabled]="!cart().summary.selectedCount">Tiến hành thanh toán</a>
+        <ul class="trust"><li>Thanh toán bảo mật</li><li>Đổi trả miễn phí trong 30 ngày</li></ul>
+      </aside>
+    </div>
+  }
+</main>

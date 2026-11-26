@@ -1,0 +1,12 @@
+<main class="auth">
+  <form class="card anim-pop" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    <h1>Tạo tài khoản</h1>
+    <label class="field">Họ và tên<input formControlName="fullName" autocomplete="name" />@if (invalid('fullName')) { <span class="error">Bắt buộc</span> }</label>
+    <label class="field">Số điện thoại<input formControlName="phone" type="tel" autocomplete="tel" />@if (invalid('phone')) { <span class="error">SĐT gồm 10 số, bắt đầu bằng 0</span> }</label>
+    <label class="field">Email<input formControlName="email" type="email" autocomplete="email" />@if (invalid('email')) { <span class="error">Email không hợp lệ</span> }</label>
+    <label class="field">Mật khẩu<input formControlName="password" type="password" autocomplete="new-password" />@if (invalid('password')) { <span class="error">Tối thiểu 8 ký tự, có cả chữ và số</span> }</label>
+    @if (error()) { <span class="error-text" role="alert" animate.enter="fade-down-in">{{ error() }}</span> }
+    <button type="submit" class="btn primary block" [disabled]="busy()">Tạo tài khoản</button>
+    <p class="muted">Đã có tài khoản? <a routerLink="/dang-nhap">Đăng nhập</a></p>
+  </form>
+</main>

@@ -1,0 +1,36 @@
+<div class="page-head">
+  <div><h1>Sản phẩm</h1><p>Quản lý tồn kho và tối ưu SEO cho từng sản phẩm</p></div>
+  <button type="button" class="btn primary" (click)="newProduct()">Thêm sản phẩm</button>
+</div>
+
+<div class="row" style="margin-bottom: 16px">
+  <app-search-box label="Tìm sản phẩm" placeholder="Tên sản phẩm, thương hiệu…" (search)="search($event)" />
+</div>
+
+<div class="card">
+  <div class="table-wrap"><table class="table">
+    <thead><tr><th>Sản phẩm</th><th appFilter label="Danh mục" [options]="categoryOptions()" [value]="categoryId()" (valueChange)="filter('category', $event)"></th><th>Giá bán</th><th>Tồn kho</th><th appFilter label="Trạng thái" [options]="statusOptions" [value]="status()" (valueChange)="filter('status', $event)"></th><th>SEO</th><th></th></tr></thead>
+    <tbody>
+      @for (r of result()?.content ?? []; track r.id) {
+        <tr [rowLink]="['/admin/san-pham', r.id]"><td><strong>{{ r.name }}</strong><br /><small class="muted">/{{ r.slug }}</small></td><td>{{ r.categoryName }}</td><td>{{ r.price | vnd }}</td><td>{{ r.totalStock }}</td>
+          <td><span class="chip" [class]="'status-' + r.status">{{ statusLabel(r.status) }}</span></td>
+          <td><span class="chip" [class.warn]="r.seoScore < 70">{{ r.seoScore }}/100</span></td>
+          <td class="row"><button type="button" class="btn sm" (click)="edit(r)">Sửa</button>@if (r.status === 'HIDDEN') { <button type="button" class="btn sm" (click)="show(r)">Hiện</button> } @else { <button type="button" class="btn sm danger" (click)="hide(r)">Ẩn</button> }</td></tr>
+      } @empty { <tr><td colspan="7" class="muted">Không có sản phẩm.</td></tr> }
+    </tbody></table></div>
+  @if ((result()?.totalPages ?? 0) > 1) {
+    <div class="row" style="margin-top: 12px">
+      <button type="button" class="btn sm" [disabled]="page() === 0" (click)="goto(page() - 1)">Trước</button>
+      <span class="muted">Trang {{ page() + 1 }} / {{ result()?.totalPages }} · {{ result()?.totalElements }} sản phẩm</span>
+      <button type="button" class="btn sm" [disabled]="page() + 1 >= (result()?.totalPages ?? 0)" (click)="goto(page() + 1)">Sau</button>
+    </div>
+  }
+</div>
+
+@if (editing(); as e) {
+  <div class="drawer" animate.enter="drawer-in" animate.leave="drawer-out" (click)="editing.set(null)">
+    <div class="panel flush" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-label="Sản phẩm">
+      <app-product-editor [productId]="e.id" (saved)="editing.set(null); reload()" (closed)="editing.set(null)" />
+    </div>
+  </div>
+}

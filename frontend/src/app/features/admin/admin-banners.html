@@ -1,0 +1,55 @@
+<div class="page-head">
+  <div><h1>Banner trang chủ</h1><p>Các slide chạy tự động ở đầu trang chủ, theo thứ tự bên dưới</p></div>
+  <button type="button" class="btn primary" (click)="add()">Thêm banner</button>
+</div>
+
+<div class="list">
+  @for (b of items(); track b.id; let i = $index) {
+    <article class="card item" [class.off]="!b.active" animate.enter="fade-down-in" animate.leave="line-out">
+      <div class="thumb">@if (img(b.imageUrl); as s) { <img [src]="s" [alt]="b.altText || b.title" /> }<span class="no">{{ i + 1 }}</span></div>
+      <div class="info">
+        <strong>{{ b.title }}</strong>
+        @if (b.subtitle) { <span class="muted">{{ b.subtitle }}</span> }
+        <small class="muted">{{ b.linkUrl ? (b.ctaLabel || 'Xem ngay') + ' → ' + b.linkUrl : 'Không có nút bấm' }}</small>
+      </div>
+      <div class="acts">
+        <button type="button" class="btn sm" [disabled]="i === 0" (click)="move(i, -1)" aria-label="Đưa lên">▲</button>
+        <button type="button" class="btn sm" [disabled]="i === items().length - 1" (click)="move(i, 1)" aria-label="Đưa xuống">▼</button>
+        <button type="button" class="btn sm" (click)="toggle(b)">{{ b.active ? 'Ẩn' : 'Hiện' }}</button>
+        <button type="button" class="btn sm" (click)="edit(b)">Sửa</button>
+        <button type="button" class="btn sm danger" (click)="remove(b)">Xóa</button>
+      </div>
+    </article>
+  } @empty {
+    <div class="card muted">Chưa có banner. Trang chủ đang dùng banner mặc định — bấm "Thêm banner" để tạo slide đầu tiên.</div>
+  }
+</div>
+
+@if (editing(); as e) {
+  <div class="drawer" animate.enter="drawer-in" animate.leave="drawer-out" (click)="editing.set(null)">
+    <form class="panel" [formGroup]="form" (click)="$event.stopPropagation()" (submit)="$event.preventDefault()" aria-labelledby="bn-title">
+      <div class="row between"><h2 id="bn-title">{{ e.id ? 'Sửa banner' : 'Thêm banner' }}</h2><button type="button" class="btn sm" (click)="editing.set(null)" aria-label="Đóng">✕</button></div>
+
+      <div class="preview" [class.empty]="!form.controls.imageUrl.value">
+        @if (img(form.controls.imageUrl.value); as s) { <img [src]="s" alt="Xem trước banner" /> }
+        <div class="shade"></div>
+        <div class="pv"><strong>{{ form.controls.title.value || 'Tiêu đề banner' }}</strong><span>{{ form.controls.subtitle.value }}</span>
+          @if (form.controls.linkUrl.value) { <em>{{ form.controls.ctaLabel.value || 'Xem ngay' }} →</em> }</div>
+      </div>
+      <label class="btn sm upload">{{ uploading() ? 'Đang tải…' : (form.controls.imageUrl.value ? 'Đổi ảnh' : '+ Chọn ảnh') }}<input type="file" accept="image/*" [disabled]="uploading()" (change)="upload($event)" hidden /></label>
+      <small class="muted">Nên dùng ảnh ngang tỉ lệ 21:8 (ví dụ 1920×730), chủ thể nằm bên phải vì chữ hiển thị bên trái. Tải được ảnh JPG/PNG/WebP tới 6 MB (lớn hơn sẽ tự nén).</small>
+
+      <div class="form-grid">
+        <label class="field full">Tiêu đề *<input formControlName="title" maxlength="120" /></label>
+        <label class="field full">Mô tả ngắn<textarea formControlName="subtitle" rows="2" maxlength="500"></textarea></label>
+        <label class="field">Nhãn nút bấm<input formControlName="ctaLabel" placeholder="Mua sắm ngay" maxlength="40" /></label>
+        <label class="field">Liên kết<input formControlName="linkUrl" placeholder="/san-pham?category=dien-thoai" /></label>
+        <label class="field full">Mô tả ảnh (alt)<input formControlName="altText" /></label>
+        <label class="check full"><input type="checkbox" formControlName="active" /> Hiển thị trên trang chủ</label>
+      </div>
+
+      @if (error()) { <div class="error-text" role="alert">{{ error() }}</div> }
+      <div class="row"><button type="button" class="btn primary" (click)="save()">Lưu</button><button type="button" class="btn" (click)="editing.set(null)">Hủy</button></div>
+    </form>
+  </div>
+}

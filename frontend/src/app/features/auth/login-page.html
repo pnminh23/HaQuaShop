@@ -1,0 +1,10 @@
+<main class="auth">
+  <form class="card anim-pop" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    <h1>Đăng nhập</h1>
+    <label class="field">Email hoặc số điện thoại<input formControlName="username" autocomplete="username" /></label>
+    <label class="field">Mật khẩu<input type="password" formControlName="password" autocomplete="current-password" /></label>
+    @if (error()) { <span class="error-text" role="alert" animate.enter="fade-down-in">{{ error() }}</span> }
+    <button type="submit" class="btn primary block" [disabled]="busy()">Đăng nhập</button>
+    <p class="muted">Chưa có tài khoản? <a routerLink="/dang-ky">Đăng ký</a></p>
+  </form>
+</main>

@@ -1,0 +1,25 @@
+.header { background: var(--surface); border-bottom: 1px solid var(--border); }
+.inner { max-width: 1560px; margin: 0 auto; padding-left: 24px; padding-right: 24px; }
+.topbar { background: var(--green-700); color: var(--green-50); font-size: 13px;
+  .inner { padding-top: 9px; padding-bottom: 9px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 24px; }
+  a { color: var(--green-50); text-decoration: none; margin-left: 20px; } }
+.main { padding-top: 16px; padding-bottom: 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 16px 28px; }
+.logo { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--ink); font-size: 25px; font-weight: 700; b { color: var(--green-600); } }
+.search { position: relative; flex: 1 1 320px; display: flex; align-items: center; gap: 10px; background: var(--bg); border: 1px solid var(--border); border-radius: 999px; padding: 0 6px 0 18px; height: 50px; margin: 0;
+  input { flex: 1; min-width: 0; border: 0; background: transparent; outline: none; font-size: 15px; } }
+.suggest { position: absolute; top: 56px; left: 0; right: 0; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; box-shadow: 0 12px 32px rgba(0,0,0,.12); padding: 6px; z-index: 20;
+  button { width: 100%; display: flex; justify-content: space-between; gap: 12px; text-align: left; border: 0; background: none; padding: 10px 14px; border-radius: 10px; cursor: pointer; &:hover { background: var(--green-50); } span { color: var(--green-700); font-weight: 600; white-space: nowrap; } } }
+.actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.round { width: 46px; height: 46px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--green-700); border: 1px solid var(--border); }
+.cart { display: flex; align-items: center; gap: 8px; height: 46px; padding: 0 10px 0 16px; border-radius: var(--radius-btn); background: var(--green-100); color: var(--green-700); text-decoration: none; font-weight: 600; }
+.count { min-width: 26px; height: 26px; border-radius: 999px; background: var(--green-600); color: #fff; font-size: 13px; display: inline-flex; align-items: center; justify-content: center; padding: 0 7px; }
+.nav { padding-bottom: 10px; ul { display: flex; gap: 4px; flex-wrap: wrap; }
+  a { display: inline-flex; align-items: center; height: 40px; padding: 0 14px; border-radius: var(--radius-btn); text-decoration: none; font-size: 15px; font-weight: 500; color: var(--ink-2); &.active { background: var(--green-100); color: var(--green-700); font-weight: 600; } &.sale { color: var(--accent); } } }
+
+.count.bump { animation: bump .45s var(--ease-spring); }
+.suggest button { transition: background var(--dur-fast), padding var(--dur-fast) var(--ease-out); &:hover { padding-left: 20px; } }
+.cart { transition: background var(--dur-fast), transform var(--dur-fast) var(--ease-out); &:hover { background: var(--green-200); transform: translateY(-1px); } }
+.round { transition: background var(--dur-fast), transform var(--dur-fast) var(--ease-out); &:hover { background: var(--green-100); transform: translateY(-1px); } }
+.logo svg { transition: transform .5s var(--ease-spring); } .logo:hover svg { transform: rotate(-12deg) scale(1.08); }
+.nav a { transition: background var(--dur-fast), color var(--dur-fast), transform var(--dur-fast) var(--ease-out); &:hover { background: var(--green-50); transform: translateY(-1px); } }
+.header { animation: fade-down .5s var(--ease-out) both; }

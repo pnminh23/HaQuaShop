@@ -1,0 +1,49 @@
+@if (open()) {
+  <section class="panel" animate.enter="chat-in" animate.leave="chat-out" aria-label="Trợ lý AI HaQua">
+    <header>
+      <div><strong>{{ state()?.botName ?? 'Trợ lý HaQua' }}</strong><span>Đang trực tuyến · trả lời ngay</span></div>
+      <div class="hbtns">
+        <button type="button" (click)="restart()" aria-label="Bắt đầu cuộc trò chuyện mới">↻</button>
+        <button type="button" (click)="toggle()" aria-label="Thu nhỏ trợ lý">–</button>
+      </div>
+    </header>
+
+    <div class="list" #list>
+      @for (m of messages(); track m.id) {
+        <div class="msg" [class.me]="m.sender === 'USER'" [class.staff]="m.sender === 'STAFF'">
+          @if (m.sender === 'STAFF') { <small>Nhân viên HaQua</small> }
+          @if (m.sender === 'USER') { <p>{{ m.content }}</p> } @else { <div class="md" [innerHTML]="md(m.content)"></div> }
+          @if (m.products.length) {
+            <div class="prods">
+              @for (p of m.products; track p.id) {
+                <div class="prod">
+                  <a [routerLink]="['/san-pham', p.slug]" (click)="open.set(false)"><strong>{{ p.name }}</strong><span>{{ p.price | vnd }}</span></a>
+                  <button type="button" class="btn sm" (click)="addToCart(p)">Thêm vào giỏ</button>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+      @if (typing()) { <div class="msg typing" animate.enter="fade-in">HaQua AI đang soạn câu trả lời…</div> }
+    </div>
+
+    @if (messages().length <= 1) {
+      <div class="quick">
+        @for (q of quick; track q) { <button type="button" (click)="send(q)">{{ q }}</button> }
+      </div>
+    }
+
+    <form (submit)="$event.preventDefault(); send()">
+      <input type="text" name="draft" [(ngModel)]="draft" aria-label="Nhập câu hỏi cho trợ lý AI" placeholder="Hỏi về sản phẩm, giá, giao hàng…" autocomplete="off" />
+      <button type="submit" class="btn primary sm" aria-label="Gửi">Gửi</button>
+    </form>
+    <footer>
+      <span>AI có thể nhầm lẫn, hãy kiểm tra lại thông tin quan trọng.</span>
+      <button type="button" (click)="human()">Gặp nhân viên</button>
+    </footer>
+  </section>
+}
+<button type="button" class="fab" (click)="toggle()" [attr.aria-expanded]="open()" aria-label="Mở trợ lý AI">
+  {{ open() ? '✕' : 'Hỏi AI' }}
+</button>

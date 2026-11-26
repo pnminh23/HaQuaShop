@@ -1,0 +1,32 @@
+<section class="slider" [class.moving]="prev() >= 0" [class.back]="dir() < 0" aria-roledescription="carousel" aria-label="Banner nổi bật"
+  (mouseenter)="pause(true)" (mouseleave)="pause(false)" (focusin)="pause(true)" (focusout)="pause(false)"
+  (pointerdown)="down($event)" (pointerup)="up($event)">
+  <div class="slides" aria-live="off">
+    @for (b of banners(); track b.id; let i = $index) {
+      <article class="slide" [class.on]="i === index()" [class.leave]="i === prev() && i !== index()" [attr.aria-hidden]="i !== index()" role="group" [attr.aria-label]="(i + 1) + ' / ' + count()">
+        @if (src(b); as url) { <img [src]="url" [alt]="b.altText || b.title" [attr.loading]="i === 0 ? 'eager' : 'lazy'" [attr.fetchpriority]="i === 0 ? 'high' : null" draggable="false" /> }
+        <div class="shade"></div>
+        <div class="copy">
+          <span class="eyebrow">HaQua · Công nghệ chính hãng</span>
+          @if (i === 0) { <h1>{{ b.title }}</h1> } @else { <h2>{{ b.title }}</h2> }
+          @if (b.subtitle) { <p>{{ b.subtitle }}</p> }
+          @if (b.linkUrl) {
+            <a class="btn cta" [href]="b.linkUrl" [attr.tabindex]="i === index() ? 0 : -1" (click)="open($event, b)">{{ b.ctaLabel || 'Xem ngay' }} <span aria-hidden="true">→</span></a>
+          }
+        </div>
+      </article>
+    }
+  </div>
+
+  @if (count() > 1) {
+    <button type="button" class="nav prev" aria-label="Banner trước" (click)="go(-1)">‹</button>
+    <button type="button" class="nav next" aria-label="Banner tiếp theo" (click)="go(1)">›</button>
+    <div class="dots" role="tablist" aria-label="Chọn banner">
+      @for (b of banners(); track b.id; let i = $index) {
+        <button type="button" role="tab" [attr.aria-selected]="i === index()" [attr.aria-label]="'Banner ' + (i + 1)" [class.on]="i === index()" (click)="goto(i)">
+          <i [class.run]="i === index() && started() && !paused()"></i>
+        </button>
+      }
+    </div>
+  }
+</section>

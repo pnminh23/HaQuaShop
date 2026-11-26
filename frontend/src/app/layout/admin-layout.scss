@@ -1,0 +1,36 @@
+.shell { display: flex; min-height: 100vh; flex-wrap: wrap; }
+/* Sidebar dính khi cuộn để nút thu gọn và đăng xuất luôn trong tầm tay */
+.side { width: 260px; flex: 0 0 260px; background: var(--green-700); color: #fff; padding: 24px 16px; display: flex; flex-direction: column; gap: 24px;
+  position: sticky; top: 0; height: 100vh; overflow-y: auto; overflow-x: hidden; transition: width var(--dur) var(--ease-out), flex-basis var(--dur) var(--ease-out), padding var(--dur) var(--ease-out); }
+.top-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.brand { color: #fff; text-decoration: none; display: flex; flex-direction: column; font-size: 13px; min-width: 0; strong { font-size: 24px; } }
+.collapse { flex: none; width: 32px; height: 32px; border-radius: 4px; border: 1px solid rgba(255,255,255,.3); background: transparent; color: #fff; cursor: pointer; font-size: 16px; line-height: 1; &:hover { background: rgba(255,255,255,.12); } }
+nav { display: flex; flex-direction: column; gap: 4px; flex: 1;
+  h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .1em; color: #a9bfa0; margin: 16px 12px 6px; white-space: nowrap; }
+  a { color: #e3ecdf; text-decoration: none; padding: 10px 12px; border-radius: 6px; font-size: 15px; display: flex; align-items: center; gap: 12px; white-space: nowrap; &:hover { background: rgba(255,255,255,.08); } &.active { background: rgba(255,255,255,.16); font-weight: 600; } } }
+.ico { flex: none; width: 24px; height: 24px; border-radius: 4px; background: rgba(255,255,255,.12); display: inline-flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; }
+.foot { display: flex; flex-direction: column; gap: 12px; font-size: 14px; a { color: #cfdcc9; text-decoration: none; display: flex; align-items: center; gap: 12px; white-space: nowrap; }
+  .me { display: flex; flex-direction: column; span { font-size: 12px; color: #a9bfa0; } }
+  .btn { background: transparent; color: #fff; border-color: rgba(255,255,255,.4); .ico { display: none; background: none; } } }
+.content { flex: 1 1 600px; min-width: 0; padding: 28px 32px 64px; }
+
+/* ---- thu gọn: chỉ còn cột icon ---- */
+.collapsed .side { width: 72px; flex-basis: 72px; padding: 24px 12px; }
+.collapsed .top-row { flex-direction: column; align-items: center; }
+.collapsed .brand { align-items: center; .brand-sub { display: none; } }
+.collapsed nav { h2 { display: none; } a { justify-content: center; padding: 10px 0; .lbl { display: none; } &:hover { padding-left: 0; } } }
+.collapsed .foot { align-items: center; .me, a .lbl { display: none; } .btn { width: 40px; padding: 0; .lbl { display: none; } .ico { display: inline-flex; } } }
+
+@media (max-width: 860px) {
+  .side { position: static; height: auto; width: 100%; flex-basis: auto; }
+  .collapsed .side { width: 100%; flex-basis: auto; }
+  .content { padding: 20px 16px 48px; }
+}
+
+.side { animation: slide-in-left .45s var(--ease-out) both; }
+@keyframes slide-in-left { from { opacity: 0; transform: translateX(-24px); } to { opacity: 1; transform: none; } }
+nav a { position: relative; transition: background var(--dur-fast), padding var(--dur-fast) var(--ease-out);
+  &:hover { padding-left: 18px; }
+  &::before { content: ''; position: absolute; left: 0; top: 50%; width: 3px; height: 0; border-radius: 3px; background: #cfe3c8; transform: translateY(-50%); transition: height var(--dur) var(--ease-spring); }
+  &.active::before { height: 60%; } }
+.foot a { transition: color var(--dur-fast), transform var(--dur-fast) var(--ease-out); &:hover { color: #fff; transform: translateX(-3px); } }

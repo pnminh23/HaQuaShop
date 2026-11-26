@@ -1,0 +1,58 @@
+<div class="page-head">
+  <div><h1>Tổng quan</h1><p>Số liệu {{ range() }} ngày gần nhất, so với kỳ liền trước</p></div>
+  <div class="row">
+    @for (r of ranges; track r) { <button type="button" class="tab" [attr.aria-pressed]="range() === r" (click)="range.set(r)">{{ r }} ngày</button> }
+    <button type="button" class="btn sm" (click)="export()">Xuất báo cáo (CSV)</button>
+  </div>
+</div>
+
+@if (data(); as d) {
+  <div class="stack">
+    <div class="kpis">
+      @for (k of d.kpis; track k.label; let i = $index) {
+        <div class="card kpi" [style.--i]="i"><span class="muted">{{ k.label }}</span>
+          <strong>{{ isMoney(k.label) ? (k.value | vnd) : (k.value | number: '1.0-1') }}</strong>
+          <span [class.up]="k.changePercent >= 0" [class.down]="k.changePercent < 0">{{ k.changePercent >= 0 ? '▲' : '▼' }} {{ k.changePercent }}%</span></div>
+      }
+    </div>
+
+    <div class="two">
+      <section class="card">
+        <h2>Doanh thu theo ngày</h2>
+        @if (picked(); as p) { <p [attr.data-k]="p.date"><strong class="anim-pop">{{ p.revenue | vnd }}</strong> <span class="muted">· {{ p.date | date: 'dd/MM' }} (bấm cột để xem ngày khác)</span></p> }
+        <div class="chart" role="group" aria-label="Biểu đồ doanh thu">
+          @for (b of bars(); track b.date) {
+            <button type="button" class="bar" [class.on]="b.i === (selected() ?? bars().length - 1)" (click)="selected.set(b.i)"
+                    [style.--i]="b.i" [attr.aria-label]="(b.date | date: 'dd/MM') + ': ' + b.revenue + ' đồng'"><span [style.height.%]="b.pct"></span><small>{{ b.date | date: 'dd' }}</small></button>
+          }
+        </div>
+      </section>
+      <section class="card">
+        <h2>Doanh thu theo danh mục</h2>
+        @for (c of d.revenueByCategory; track c.category; let i = $index) {
+          <div class="cat" [style.--i]="i"><span>{{ c.category }} <strong>{{ c.revenue | vnd }}</strong></span><div class="track"><div [style.width.%]="c.percent"></div></div><small>{{ c.percent }}%</small></div>
+        } @empty { <p class="muted">Chưa có dữ liệu.</p> }
+        <hr />
+        <h2>Chatbot AI hôm nay</h2>
+        @if (chat(); as c) { <div class="row between"><span><strong>{{ c.conversationsToday }}</strong> hội thoại</span><span><strong>{{ c.aiHandledPercent }}%</strong> AI tự xử lý</span><span><strong>{{ c.ordersFromChatbot }}</strong> đơn từ chat</span></div> }
+        <a routerLink="/admin/chatbot">Xem chi tiết →</a>
+      </section>
+    </div>
+
+    <section class="card">
+      <div class="row between"><h2>Đơn hàng gần đây</h2><a routerLink="/admin/don-hang">Tất cả đơn →</a></div>
+      <div class="table-wrap"><table class="table"><thead><tr><th>Mã đơn</th><th>Khách hàng</th><th>Kênh</th><th>Tổng tiền</th><th>Trạng thái</th></tr></thead>
+        <tbody>@for (o of d.recentOrders; track o.id) { <tr><td><a routerLink="/admin/don-hang">{{ o.code }}</a></td><td>{{ o.receiverName }}</td><td>{{ o.channel }}</td><td>{{ o.total | vnd }}</td><td><span class="chip" [class]="'status-' + o.status">{{ label(o.status) }}</span></td></tr> }</tbody></table></div>
+    </section>
+
+    <div class="two">
+      <section class="card"><h2>Bán chạy nhất</h2>
+        @for (t of d.topProducts; track t.productId) { <div class="row between top"><span>{{ t.name }}<br /><small class="muted">{{ t.sold }} đã bán</small></span><strong>{{ t.revenue | vnd }}</strong></div> } @empty { <p class="muted">Chưa có đơn hàng.</p> }</section>
+      <section class="card"><h2>Sắp hết hàng</h2>
+        @for (l of d.lowStock; track l.variantId) { <div class="row between top"><span>{{ l.productName }} <small class="muted">{{ l.variant }}</small></span><span class="chip warn">còn {{ l.stock }}</span></div> } @empty { <p class="muted">Tồn kho ổn định.</p> }</section>
+    </div>
+  </div>
+} @else {
+  <div class="kpis" aria-busy="true">@for (n of [1, 2, 3, 4]; track n) { <div class="skeleton" style="height: 110px"></div> }</div>
+  <div class="skeleton" style="height: 260px; margin-top: 20px"></div>
+}

@@ -1,0 +1,84 @@
+<form class="editor" [formGroup]="form" (submit)="$event.preventDefault()" aria-label="Biểu mẫu sản phẩm" [attr.aria-busy]="loading()">
+      @if (mode() === 'popup') {
+        <div class="row between"><h2>{{ productId() ? 'Sửa sản phẩm' : 'Thêm sản phẩm' }}</h2><button type="button" class="btn sm" (click)="closed.emit()" aria-label="Đóng">✕</button></div>
+      }
+
+      <div class="form-grid">
+        <label class="field full">Tên sản phẩm<input formControlName="name" (input)="onName()" /></label>
+        <label class="field">Danh mục<select formControlName="categoryId"><option [ngValue]="0" disabled>Chọn danh mục</option>@for (c of categories(); track c.id) { <option [ngValue]="c.id">{{ c.name }}</option> }</select></label>
+        <div class="field combo">
+          <label for="brand-input">Thương hiệu</label>
+          <input id="brand-input" role="combobox" autocomplete="off" aria-autocomplete="list" aria-controls="brand-list" [attr.aria-expanded]="brandOpen()"
+            placeholder="Chọn hoặc gõ để tìm / tạo mới" [value]="brandQuery()"
+            (input)="onBrandInput($any($event.target).value)" (focus)="brandOpen.set(true)" (blur)="onBrandBlur()" (keydown)="onBrandKey($event)" />
+          @if (brandOpen() && (brandMatches().length || brandCanCreate())) {
+            <ul class="combo-list" id="brand-list" role="listbox">
+              @for (b of brandMatches(); track b.id; let i = $index) {
+                <li role="option" [class.active]="i === brandActive()" [attr.aria-selected]="b.name === form.controls.brand.value" (mousedown)="$event.preventDefault(); selectBrand(b)">{{ b.name }}</li>
+              }
+              @if (brandCanCreate()) {
+                <li role="option" class="create" [class.active]="brandMatches().length === brandActive()" (mousedown)="$event.preventDefault(); createBrand()">
+                  + Tạo thương hiệu mới “{{ brandQuery().trim() }}”
+                </li>
+              }
+            </ul>
+          }
+        </div>
+        <label class="field full">Mô tả<textarea formControlName="description" rows="3"></textarea></label>
+      </div>
+
+      <h3>Biến thể (giá và tồn kho)</h3>
+      <div formArrayName="variants" class="stack">
+        @for (v of variants.controls; track $index; let i = $index) {
+          <div [formGroupName]="i" class="variant" animate.enter="fade-down-in" animate.leave="line-out">
+            <label class="field">SKU<input formControlName="sku" /></label>
+            <label class="field">Màu<input formControlName="color" /></label>
+            <label class="field">Dung lượng<input formControlName="storage" /></label>
+            <label class="field">Giá bán (₫)<input type="number" formControlName="price" /></label>
+            <label class="field">Giá gốc (₫)<input type="number" formControlName="originalPrice" placeholder="0 = không giảm" /></label>
+            <label class="field">Tồn kho<input type="number" formControlName="stock" /></label>
+            <button type="button" class="btn sm danger" (click)="removeVariant(i)" [disabled]="variants.length === 1">Xóa</button>
+          </div>
+        }
+        <button type="button" class="btn sm" (click)="addVariant()">+ Thêm biến thể</button>
+      </div>
+
+      <h3>Hình ảnh</h3>
+      <div formArrayName="images" class="stack">
+        @for (im of images.controls; track $index; let i = $index) {
+          <div [formGroupName]="i" class="imgrow" animate.enter="pop-in" animate.leave="line-out">
+            @if (img(im.value.url); as src) { <img [src]="src" alt="" width="72" height="72" /> }
+            <label class="field grow">Văn bản thay thế (alt)<input formControlName="altText" /></label>
+            @if (i === 0) { <span class="chip">Ảnh chính</span> } @else { <button type="button" class="btn sm" (click)="moveFirst(i)">Đặt làm chính</button> }
+            <button type="button" class="btn sm danger" (click)="removeImage(i)">Xóa</button>
+          </div>
+        }
+        <label class="btn sm upload" [attr.aria-disabled]="uploading()">{{ uploading() ? 'Đang tải…' : '+ Tải ảnh lên' }}<input type="file" accept="image/*" multiple [disabled]="uploading()" (change)="upload($event)" hidden /></label>
+        <small class="muted">Chọn được nhiều ảnh; ảnh tự thu nhỏ và nén WebP. Ảnh đầu tiên là ảnh chính; nhớ điền alt cho từng ảnh.</small>
+      </div>
+
+      <h3>Tối ưu SEO</h3>
+      <div class="form-grid">
+        <label class="field full">Từ khóa chính<input formControlName="focusKeyword" /></label>
+        <label class="field full">Đường dẫn (slug)<input formControlName="slug" (input)="slugTouched.set(true)" /></label>
+        <label class="field full">Meta title ({{ form.controls.metaTitle.value.length }}/60)<input formControlName="metaTitle" /></label>
+        <label class="field full">Meta description ({{ form.controls.metaDescription.value.length }}/160)<textarea formControlName="metaDescription" rows="3"></textarea></label>
+      </div>
+      <div class="serp card" aria-label="Xem trước trên Google">
+        <small>haqua.vn › {{ form.controls.slug.value }}</small>
+        <strong>{{ form.controls.metaTitle.value || form.controls.name.value }}</strong>
+        <span>{{ form.controls.metaDescription.value || 'Chưa có meta description' }}</span>
+      </div>
+      @if (seo(); as s) {
+        <div class="card seo-score" animate.enter="fade-down-in"><strong>Điểm SEO: {{ s.score }}/100</strong><div class="meter"><div [style.width.%]="s.score"></div></div>
+          <ul>@for (c of s.criteria; track c.label) { <li [class.ok]="c.ok">{{ c.ok ? '✓' : '✗' }} {{ c.label }}</li> }</ul></div>
+      }
+
+      @if (errors()) { <div class="error-text" role="alert" animate.enter="fade-down-in">{{ errors() }}</div> }
+      <div class="actions" role="toolbar" aria-label="Lưu sản phẩm">
+        <button type="button" class="btn" (click)="closed.emit()">{{ mode() === 'page' ? '← Quay lại' : 'Hủy' }}</button>
+        <span class="grow"></span>
+        <button type="button" class="btn" (click)="save('DRAFT')">Lưu nháp</button>
+        <button type="button" class="btn primary" (click)="save('ACTIVE')">Đăng bán</button>
+      </div>
+</form>

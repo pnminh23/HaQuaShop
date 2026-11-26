@@ -1,0 +1,9 @@
+.wrap h1 { font-size: 36px; margin-bottom: 20px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 20px; align-items: start; .wide { grid-column: 1 / -1; } }
+.card { display: flex; flex-direction: column; gap: 14px; h2 { font-size: 20px; } }
+.f { display: flex; flex-direction: column; gap: 12px; align-items: flex-start; .field { width: 100%; } }
+.af { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); .full { grid-column: 1 / -1; } .row, .check { grid-column: 1 / -1; } }
+.points { color: var(--green-700); }
+.row { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.addr { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 12px 0; border-top: 1px solid #ecede6; .acts { display: flex; gap: 8px; } }
+.check { display: flex; gap: 8px; align-items: center; input { accent-color: var(--green-600); } }

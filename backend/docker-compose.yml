@@ -1,0 +1,17 @@
+# MySQL cho môi trường prod-like. Dev mặc định dùng H2 trong bộ nhớ nên không cần file này.
+# Giá trị đọc từ .env (xem .env.example).
+services:
+  db:
+    image: mysql:8.4
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-haqua}
+      MYSQL_USER: ${MYSQL_USER:-haqua}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-haqua}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+    ports:
+      - "${MYSQL_PORT:-3306}:3306"
+    volumes:
+      - haqua-db:/var/lib/mysql
+volumes:
+  haqua-db:

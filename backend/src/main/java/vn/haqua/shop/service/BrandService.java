@@ -1,0 +1,84 @@
+package vn.haqua.shop.service;
+
+import java.util.List;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import vn.haqua.shop.dto.CatalogDtos.BrandDto;
+import vn.haqua.shop.entity.Brand;
+import vn.haqua.shop.exception.ApiException;
+import vn.haqua.shop.repository.BrandRepository;
+import vn.haqua.shop.repository.ProductRepository;
+import vn.haqua.shop.util.SlugUtil;
+
+/** Cấu hình danh mục thương hiệu; cho phép tạo nhanh ngay trong form sản phẩm. */
+@Service
+@RequiredArgsConstructor
+public class BrandService {
+
+    private final BrandRepository brands;
+    private final ProductRepository products;
+
+    /** Danh sách thương hiệu; tự bổ sung các thương hiệu đã có sẵn trên sản phẩm cũ nhưng chưa có trong bảng. */
+    @Transactional
+    public List<BrandDto> list() {
+        for (String name : products.findDistinctBrands()) ensure(name);
+        return brands.findAllByOrderByNameAsc().stream().map(b -> toDto(b, products.countByBrand(b.getName()))).toList();
+    }
+
+    /** Lấy thương hiệu theo tên (không phân biệt hoa thường), chưa có thì tạo mới. */
+    @Transactional
+    public Brand ensure(String rawName) {
+        String name = rawName == null ? "" : rawName.trim().replaceAll("\\s+", " ");
+        if (name.isEmpty()) throw ApiException.badRequest("Tên thương hiệu không được để trống");
+        if (name.length() > 100) throw ApiException.badRequest("Tên thương hiệu tối đa 100 ký tự");
+        return brands.findByNameIgnoreCase(name).orElseGet(() -> {
+            String base = SlugUtil.toSlug(name);
+            if (base.isEmpty()) base = "brand";
+            String slug = base;
+            for (int i = 2; brands.findBySlug(slug).isPresent(); i++) slug = base + "-" + i;
+            return brands.save(new Brand(name, slug));
+        });
+    }
+
+    @Transactional
+    public BrandDto create(String name) {
+        Brand b = ensure(name);
+        return toDto(b, products.countByBrand(b.getName()));
+    }
+
+    private BrandDto toDto(Brand b) {
+        return new BrandDto(b.getId(), b.getName(), b.getSlug(), 0);
+    }
+
+    private BrandDto toDto(Brand b, long count) {
+        return new BrandDto(b.getId(), b.getName(), b.getSlug(), count);
+    }
+
+    /** Đổi tên thương hiệu và cập nhật tên trên mọi sản phẩm đang dùng nó. */
+    @Transactional
+    public BrandDto rename(Long id, String rawName) {
+        Brand b = brands.findById(id).orElseThrow(() -> ApiException.notFound("Thương hiệu không tồn tại"));
+        String name = rawName == null ? "" : rawName.trim().replaceAll("\\s+", " ");
+        if (name.isEmpty()) throw ApiException.badRequest("Tên thương hiệu không được để trống");
+        if (name.length() > 100) throw ApiException.badRequest("Tên thương hiệu tối đa 100 ký tự");
+        brands.findByNameIgnoreCase(name).filter(o -> !o.getId().equals(id))
+                .ifPresent(o -> { throw ApiException.conflict("Đã có thương hiệu “" + o.getName() + "”"); });
+        String old = b.getName();
+        if (!old.equals(name)) {
+            products.findByBrand(old).forEach(p -> p.setBrand(name));
+            b.setName(name);
+        }
+        return toDto(b, products.countByBrand(name));
+    }
+
+    /** Chỉ xóa được thương hiệu chưa gắn với sản phẩm nào. */
+    @Transactional
+    public void delete(Long id) {
+        Brand b = brands.findById(id).orElseThrow(() -> ApiException.notFound("Thương hiệu không tồn tại"));
+        if (products.countByBrand(b.getName()) > 0) throw ApiException.conflict("Thương hiệu đang được dùng bởi sản phẩm, không thể xóa");
+        brands.delete(b);
+    }
+}

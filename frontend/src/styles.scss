@@ -1,0 +1,189 @@
+/* Design tokens lấy từ bản thiết kế HaQua */
+:root {
+  --green-700: #2c4231;
+  --green-600: #3e5a43;
+  --green-200: #c9d8c1;
+  --green-100: #e7ece2;
+  --green-50: #eef2ea;
+  --bg: #f5f4ef;
+  --surface: #ffffff;
+  --border: #e2e3da;
+  --ink: #18211b;
+  --ink-2: #4a554d;
+  --ink-3: #5b665e;
+  --accent: #a8481f;
+  --star: #c98a1b;
+  --danger: #b3261e;
+  --radius: 22px;
+  --radius-sm: 12px;
+  --radius-btn: 6px; /* nút bấm: bo nhẹ, không còn dạng viên thuốc */
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body { margin: 0; }
+
+body {
+  font-family: 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, p { margin: 0; }
+a { color: var(--green-600); }
+button, input, select, textarea { font: inherit; color: inherit; }
+img { max-width: 100%; display: block; }
+ul, ol { margin: 0; padding: 0; list-style: none; }
+
+.container { max-width: 1560px; margin: 0 auto; padding: 24px 24px 64px; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* ---- thành phần dùng chung ---- */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px; }
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  height: 46px; padding: 0 22px; border-radius: var(--radius-btn); border: 1.5px solid var(--green-600);
+  background: var(--surface); color: var(--green-700); font-weight: 600; font-size: 15px;
+  cursor: pointer; text-decoration: none; transition: background .15s;
+  &:hover { background: var(--green-50); }
+  &:disabled { opacity: .5; cursor: not-allowed; }
+  &.primary { background: var(--green-600); color: #fff; &:hover { background: var(--green-700); } }
+  &.danger { border-color: var(--danger); color: var(--danger); }
+  &.sm { height: 36px; padding: 0 14px; font-size: 14px; }
+  &.block { width: 100%; }
+}
+
+.field { display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-weight: 500; color: var(--ink-2); }
+.input, .field input, .field select, .field textarea {
+  min-height: 44px; border-radius: var(--radius-sm); border: 1px solid var(--border);
+  background: var(--surface); padding: 0 14px; font-size: 15px; color: var(--ink); width: 100%;
+  &:focus-visible { outline: 2px solid var(--green-600); outline-offset: 1px; }
+}
+.field textarea { padding: 10px 14px; }
+.field .error, .error-text { color: var(--danger); font-size: 13px; font-weight: 500; }
+
+.chip {
+  display: inline-flex; align-items: center; height: 32px; padding: 0 12px; border-radius: 999px;
+  font-size: 13px; font-weight: 600; background: var(--green-100); color: var(--green-700);
+  &.warn { background: #f6e6dc; color: var(--accent); }
+  &.info { background: #e2e9f3; color: #28476e; }
+  &.muted { background: #ecece6; color: var(--ink-3); }
+  &.danger { background: #f8e0de; color: var(--danger); }
+}
+
+.breadcrumb ol { display: flex; gap: 8px; flex-wrap: wrap; font-size: 14px; color: var(--ink-3); margin-bottom: 16px;
+  a { color: var(--ink-2); text-decoration: none; }
+  [aria-current] { color: var(--ink); font-weight: 600; } }
+
+.table-wrap { overflow-x: auto; }
+table.table { width: 100%; border-collapse: collapse; font-size: 14px;
+  th { text-align: left; font-weight: 600; color: var(--ink-3); padding: 10px 12px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  td { padding: 12px; border-bottom: 1px solid #ecede6; vertical-align: middle; } }
+
+.toolbar { display: flex; gap: 8px; flex-wrap: wrap; }
+.tab { height: 40px; padding: 0 16px; border-radius: var(--radius-btn); border: 1px solid var(--border); background: var(--surface);
+  cursor: pointer; font-weight: 500; font-size: 14px;
+  &[aria-pressed='true'] { background: var(--green-600); border-color: var(--green-600); color: #fff; } }
+
+.muted { color: var(--ink-3); }
+.price { font-weight: 700; color: var(--green-700); }
+.old-price { text-decoration: line-through; color: var(--ink-3); font-size: .9em; }
+.grid-products { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; }
+
+@media (max-width: 640px) { .container { padding: 16px 16px 48px; } }
+
+/* =====================================================================
+   ANIMATION – dùng chung cho cửa hàng và quản trị.
+   Mọi chuyển động tự tắt khi người dùng bật "giảm chuyển động" (cuối file).
+   ===================================================================== */
+:root {
+  --ease-out: cubic-bezier(.22, 1, .36, 1);
+  --ease-spring: cubic-bezier(.34, 1.56, .64, 1);
+  --dur-fast: .15s;
+  --dur: .3s;
+  --dur-slow: .5s;
+}
+
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes fade-out { from { opacity: 1; } to { opacity: 0; } }
+@keyframes fade-up { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+@keyframes fade-down { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
+@keyframes pop-in { from { opacity: 0; transform: scale(.92); } to { opacity: 1; transform: none; } }
+@keyframes slide-in-right { from { transform: translateX(100%); } to { transform: none; } }
+@keyframes slide-out-right { from { transform: none; } to { transform: translateX(100%); } }
+@keyframes toast-in { from { opacity: 0; transform: translateY(24px) scale(.96); } to { opacity: 1; transform: none; } }
+@keyframes toast-out { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateY(12px) scale(.96); } }
+@keyframes chat-in { from { opacity: 0; transform: translateY(20px) scale(.9); } to { opacity: 1; transform: none; } }
+@keyframes chat-out { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateY(20px) scale(.9); } }
+@keyframes collapse-out { to { opacity: 0; transform: translateX(-24px); max-height: 0; padding-top: 0; padding-bottom: 0; } }
+@keyframes grow-y { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+@keyframes grow-x { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+@keyframes bump { 0%, 100% { transform: scale(1); } 40% { transform: scale(1.35); } }
+@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+@keyframes pulse-ring { 0% { box-shadow: 0 0 0 0 rgba(62, 90, 67, .45); } 100% { box-shadow: 0 0 0 16px rgba(62, 90, 67, 0); } }
+
+/* Tiện ích: dùng trực tiếp hoặc qua animate.enter / animate.leave */
+.anim-fade-up { animation: fade-up var(--dur-slow) var(--ease-out) both; animation-delay: calc(var(--i, 0) * 60ms); }
+.anim-fade-in { animation: fade-in var(--dur) ease both; }
+.anim-pop { animation: pop-in var(--dur) var(--ease-spring) both; animation-delay: calc(var(--i, 0) * 50ms); }
+.fade-in { animation: fade-in var(--dur) ease both; }
+.fade-out { animation: fade-out var(--dur-fast) ease both; }
+.fade-down-in { animation: fade-down var(--dur) var(--ease-out) both; }
+.toast-in { animation: toast-in var(--dur) var(--ease-spring) both; }
+.toast-out { animation: toast-out var(--dur-fast) ease both; }
+.chat-in { animation: chat-in var(--dur) var(--ease-spring) both; transform-origin: bottom right; }
+.chat-out { animation: chat-out var(--dur-fast) ease both; transform-origin: bottom right; }
+.line-out { animation: collapse-out var(--dur) var(--ease-out) both; overflow: hidden; }
+.drawer-in { animation: fade-in .22s ease-out both; > * { animation: drawer-pop-in .26s cubic-bezier(.2, .8, .2, 1) both; } }
+.drawer-out { pointer-events: none; animation: fade-out .18s ease-in both; > * { animation: drawer-pop-out .18s ease-in both; } }
+@keyframes drawer-pop-in { from { opacity: 0; transform: translateY(12px) scale(.97); } to { opacity: 1; transform: none; } }
+@keyframes drawer-pop-out { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateY(8px) scale(.98); } }
+
+/* Chuyển trang: nội dung của route vừa vào mờ dần lên */
+/* Dùng `backwards` (không `both`): fill-mode forwards giữ animation transform "đang hiệu lực" mãi trên host trang,
+   khiến Chrome biến host thành containing block của mọi `position: fixed` bên trong (popup/overlay bị co vào vùng nội dung thay vì phủ toàn trang). */
+router-outlet + * { display: block; animation: fade-up .4s var(--ease-out) backwards; }
+
+/* Lưới sản phẩm: các thẻ xuất hiện lần lượt */
+.grid-products > * { animation: fade-up var(--dur-slow) var(--ease-out) both; }
+@for $i from 1 through 12 { .grid-products > *:nth-child(#{$i}) { animation-delay: #{$i * 45}ms; } }
+
+/* Nút: nhấc nhẹ khi rê chuột, lún khi bấm */
+.btn { transition: background var(--dur-fast), transform var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast), border-color var(--dur-fast);
+  &:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(44, 66, 49, .14); }
+  &:active:not(:disabled) { transform: translateY(0) scale(.97); box-shadow: none; } }
+.tab, .chip, .pill { transition: background var(--dur-fast), color var(--dur-fast), border-color var(--dur-fast), transform var(--dur-fast) var(--ease-out); }
+.tab:hover { transform: translateY(-1px); }
+.tab:active { transform: scale(.96); }
+a { transition: color var(--dur-fast); }
+
+/* Thẻ & ô nhập */
+.card { transition: box-shadow var(--dur) var(--ease-out), transform var(--dur) var(--ease-out), border-color var(--dur); }
+.input, .field input, .field select, .field textarea { transition: border-color var(--dur-fast), box-shadow var(--dur-fast);
+  &:focus-visible { box-shadow: 0 0 0 4px rgba(62, 90, 67, .15); } }
+
+/* Ảnh sản phẩm phóng nhẹ khi rê chuột vào thẻ */
+.thumb > * { transition: transform .5s var(--ease-out); }
+.media:hover .thumb > * { transform: scale(1.06); }
+
+/* Bảng: dòng sáng lên khi rê chuột, xuất hiện lần lượt */
+table.table tbody tr { transition: background var(--dur-fast); animation: fade-in var(--dur) ease both; &:hover { background: var(--green-50); } }
+@for $i from 1 through 10 { table.table tbody tr:nth-child(#{$i}) { animation-delay: #{$i * 30}ms; } }
+
+/* Khung chờ tải (skeleton) */
+.skeleton { border-radius: var(--radius); min-height: 16px;
+  background: linear-gradient(100deg, #ecede6 30%, #f7f7f2 50%, #ecede6 70%); background-size: 200% 100%; animation: shimmer 1.4s linear infinite; }
+
+/* Tôn trọng người dùng tắt chuyển động */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .001ms !important; animation-delay: 0ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; scroll-behavior: auto !important; }
+}
+
+/* Hiện dần khi cuộn tới (trình duyệt hỗ trợ animation-timeline; nơi khác hiện ngay) */
+@supports (animation-timeline: view()) {
+  .reveal { animation: fade-up linear both; animation-timeline: view(); animation-range: entry 0% cover 28%; }
+}

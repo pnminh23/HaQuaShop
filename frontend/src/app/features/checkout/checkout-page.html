@@ -1,0 +1,99 @@
+<header class="co-head">
+  <div class="inner">
+    <a routerLink="/" class="logo" aria-label="HaQua – Về trang chủ">Ha<b>Qua</b></a>
+    <span class="muted">Thanh toán an toàn</span>
+    <a routerLink="/gio-hang">← Quay lại giỏ hàng</a>
+  </div>
+</header>
+
+<main class="container">
+  @if (done(); as d) {
+    <section class="card done anim-pop" aria-labelledby="done-title">
+      <h1 id="done-title">Đặt hàng thành công!</h1>
+      <p>Mã đơn hàng <strong>#{{ d.orderCode }}</strong>. HaQua đã gửi xác nhận qua SMS và email. {{ d.estimatedDelivery }}.</p>
+      <p class="muted">Tổng thanh toán: <strong>{{ d.total | vnd }}</strong> · Điểm HaQua Xanh sẽ tích: {{ d.pointsEarned }}</p>
+      @if (d.qrData) {
+        <div class="qr card">
+          <strong>Chuyển khoản theo mã QR</strong>
+          <code>{{ d.qrData }}</code>
+          <span>Nội dung chuyển khoản: <strong>{{ d.transferContent }}</strong> · Đơn tự xác nhận sau khi nhận tiền, hết hạn sau 30 phút.</span>
+        </div>
+      }
+      <div class="row">
+        <a routerLink="/" class="btn primary">Tiếp tục mua sắm</a>
+        <a routerLink="/tra-cuu-don-hang" [queryParams]="{ code: d.orderCode }" class="btn">Xem lại đơn hàng</a>
+      </div>
+    </section>
+  } @else if (!lines().length) {
+    <div class="card done"><h1>Chưa có sản phẩm để thanh toán</h1><a routerLink="/san-pham" class="btn primary">Mua sắm ngay</a></div>
+  } @else {
+    <h1 class="title">Thanh toán</h1>
+    <div class="layout">
+      <form [formGroup]="form" (ngSubmit)="place()" class="form" novalidate>
+        <section class="card anim-fade-up" style="--i:0" aria-labelledby="s1">
+          <h2 id="s1">1. Thông tin người nhận</h2>
+          <div class="grid">
+            <label class="field">Họ và tên *<input formControlName="receiverName" placeholder="Nguyễn Văn A" />@if (invalid('receiverName')) { <span class="error">Bắt buộc</span> }</label>
+            <label class="field">Số điện thoại *<input formControlName="phone" type="tel" placeholder="09xx xxx xxx" />@if (invalid('phone')) { <span class="error">SĐT gồm 10 số, bắt đầu bằng 0</span> }</label>
+            <label class="field">Email (nhận hóa đơn &amp; cập nhật đơn)<input formControlName="email" type="email" placeholder="ban@email.com" /></label>
+          </div>
+        </section>
+
+        <section class="card anim-fade-up" style="--i:1" aria-labelledby="s2">
+          <h2 id="s2">2. Địa chỉ giao hàng</h2>
+          <div class="grid">
+            <label class="field">Tỉnh / Thành phố *<select formControlName="province">@for (p of provinces; track p) { <option>{{ p }}</option> }</select></label>
+            <label class="field">Phường / Xã *<input formControlName="ward" />@if (invalid('ward')) { <span class="error">Bắt buộc</span> }</label>
+            <label class="field wide">Địa chỉ cụ thể *<input formControlName="detail" placeholder="Số nhà, tên đường, tòa nhà…" />@if (invalid('detail')) { <span class="error">Bắt buộc</span> }</label>
+            <label class="field wide">Ghi chú cho shipper<textarea formControlName="note" rows="2"></textarea></label>
+          </div>
+          <label class="check"><input type="checkbox" [checked]="invoice()" (change)="invoice.set(!invoice())" /> Xuất hóa đơn điện tử cho công ty</label>
+          @if (invoice()) {
+            <div class="grid">
+              <label class="field">Mã số thuế<input formControlName="taxCode" /></label>
+              <label class="field">Tên công ty<input formControlName="company" /></label>
+              <label class="field">Email nhận hóa đơn<input formControlName="invoiceEmail" type="email" /></label>
+            </div>
+          }
+        </section>
+
+        <section class="card anim-fade-up" style="--i:2" aria-labelledby="s3">
+          <h2 id="s3">3. Phương thức vận chuyển</h2>
+          @for (o of shippingOptions; track o.id) {
+            <label class="radio"><input type="radio" formControlName="shippingMethod" [value]="o.id" /><span><strong>{{ o.title }}</strong><small>{{ o.desc }}</small></span></label>
+          }
+        </section>
+
+        <section class="card anim-fade-up" style="--i:3" aria-labelledby="s4">
+          <h2 id="s4">4. Phương thức thanh toán</h2>
+          @for (o of paymentOptions; track o.id) {
+            <label class="radio"><input type="radio" formControlName="paymentMethod" [value]="o.id" /><span><strong>{{ o.title }}</strong><small>{{ o.desc }}</small></span></label>
+          }
+          @if (form.controls.paymentMethod.value === 'INSTALLMENT') {
+            <div class="terms" animate.enter="fade-down-in" animate.leave="fade-out"><strong>Chọn kỳ hạn</strong>
+              <div class="row">@for (t of terms; track t) { <button type="button" class="btn sm" [class.primary]="form.controls.installmentMonths.value === t" (click)="form.controls.installmentMonths.setValue(t)">{{ t }} tháng</button> }</div></div>
+          }
+        </section>
+
+        @if (error()) { <div class="card err" role="alert" animate.enter="fade-down-in" animate.leave="fade-out">{{ error() }}</div> }
+        <button type="submit" class="btn primary block big" [disabled]="submitting()">Đặt hàng · {{ total() | vnd }}</button>
+        <p class="muted small">Bằng việc đặt hàng, bạn đồng ý với Điều khoản mua hàng và Chính sách bảo mật của HaQua.</p>
+      </form>
+
+      <aside class="card side" aria-label="Đơn hàng của bạn">
+        <div class="row between"><h2>Đơn hàng ({{ lines().length }})</h2><a routerLink="/gio-hang">Sửa</a></div>
+        <ul>
+          @for (l of lines(); track l.id) {
+            <li><span>{{ l.name }} <small class="muted">{{ l.variantLabel }} × {{ l.qty }}</small></span><strong>{{ l.lineTotal | vnd }}</strong></li>
+          }
+        </ul>
+        <dl>
+          <div><dt>Tạm tính</dt><dd>{{ cart().summary.subtotal | vnd }}</dd></div>
+          @if (cart().summary.couponCode) { <div><dt>Mã {{ cart().summary.couponCode }}</dt><dd>−{{ cart().summary.couponDiscount | vnd }}</dd></div> }
+          <div><dt>Vận chuyển</dt><dd>{{ shippingFee() ? (shippingFee() | vnd) : 'Miễn phí' }}</dd></div>
+          <div class="total"><dt>Tổng cộng</dt><dd>{{ total() | vnd }}</dd></div>
+        </dl>
+      </aside>
+    </div>
+  }
+</main>

@@ -1,0 +1,13 @@
+.chat-grid { display: grid; grid-template-columns: minmax(280px, 1fr) 2fr; gap: 20px; margin: 20px 0; align-items: start; @media (max-width: 900px) { grid-template-columns: 1fr; } }
+.convs { display: flex; flex-direction: column; gap: 8px; max-height: 560px; overflow-y: auto; }
+.conv { text-align: left; display: flex; flex-direction: column; gap: 6px; padding: 12px; border: 1px solid var(--border); border-radius: 14px; background: var(--surface); cursor: pointer; align-items: flex-start; &.on { border-color: var(--green-600); background: var(--green-50); } .preview { font-size: 13px; color: var(--ink-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; } .row { width: 100%; } }
+.transcript { display: flex; flex-direction: column; gap: 12px; }
+.msgs { display: flex; flex-direction: column; gap: 10px; max-height: 380px; overflow-y: auto; padding: 8px; background: var(--bg); border-radius: 14px; }
+.m { max-width: 80%; align-self: flex-start; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 8px 12px; font-size: 14px; p { white-space: pre-line; } small { color: var(--ink-3); } &.u { align-self: flex-end; background: var(--green-50); } &.s { background: #fdf3e7; } }
+.grow { flex: 1; }
+.cfg { display: flex; flex-direction: column; gap: 16px; max-width: 760px; fieldset { border: 0; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; } legend { font-weight: 600; margin-bottom: 8px; padding: 0; } }
+.switch { display: flex; gap: 10px; align-items: center; cursor: pointer; input { accent-color: var(--green-600); width: 20px; height: 20px; } }
+
+.conv { transition: background var(--dur-fast), border-color var(--dur-fast), transform var(--dur-fast) var(--ease-out); &:hover { transform: translateX(3px); border-color: var(--green-200); } }
+.switch input { transition: transform var(--dur-fast) var(--ease-spring); &:active { transform: scale(.85); } }
+.m { transform-origin: left bottom; &.u { transform-origin: right bottom; } }

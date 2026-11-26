@@ -1,0 +1,29 @@
+<div class="page-head"><div><h1>Khuyến mãi</h1><p>Tạo và theo dõi mã giảm giá</p></div><button type="button" class="btn primary" (click)="open.set(!open())">Tạo mã</button></div>
+<div class="toolbar" style="margin-bottom: 16px"><app-search-box label="Tìm mã giảm giá" placeholder="Mã giảm giá…" (search)="q.set($event)" /></div>
+
+@if (open()) {
+  <form class="card form-grid" animate.enter="fade-down-in" animate.leave="fade-out" [formGroup]="form" (ngSubmit)="create()" style="margin-bottom: 20px">
+    <label class="field">Mã<input formControlName="code" placeholder="HAQUA10" /></label>
+    <label class="field">Loại<select formControlName="type"><option value="PERCENT">Phần trăm</option><option value="FIXED">Số tiền</option></select></label>
+    <label class="field">Giá trị ({{ form.controls.type.value === 'PERCENT' ? '%' : '₫' }})<input type="number" formControlName="value" /></label>
+    <label class="field">Giảm tối đa (₫)<input type="number" formControlName="maxDiscount" /></label>
+    <label class="field">Đơn tối thiểu (₫)<input type="number" formControlName="minOrder" /></label>
+    <label class="field">Số lượt (0 = không giới hạn)<input type="number" formControlName="usageLimit" /></label>
+    <label class="field">Bắt đầu<input type="datetime-local" formControlName="startAt" /></label>
+    <label class="field">Kết thúc<input type="datetime-local" formControlName="endAt" /></label>
+    @if (error()) { <span class="error-text full" animate.enter="fade-down-in">{{ error() }}</span> }
+    <div class="row full"><button type="submit" class="btn primary">Lưu</button><button type="button" class="btn" (click)="open.set(false)">Hủy</button></div>
+  </form>
+}
+
+<div class="card"><div class="table-wrap"><table class="table">
+  <thead><tr><th>Mã</th><th appFilter label="Giảm" [options]="typeOptions" [(value)]="typeFilter"></th><th>Đơn tối thiểu</th><th appFilter label="Hiệu lực" [options]="stateOptions" [(value)]="stateFilter"></th><th>Đã dùng</th><th></th></tr></thead>
+  <tbody>
+    @for (c of shown(); track c.id) {
+      <tr><td><strong>{{ c.code }}</strong></td>
+        <td>{{ c.type === 'PERCENT' ? c.value + '%' : (c.value | vnd) }} @if (c.maxDiscount) { <small class="muted">tối đa {{ c.maxDiscount | vnd }}</small> }</td>
+        <td>{{ c.minOrder | vnd }}</td><td>{{ c.endAt ? (c.endAt | date: 'dd/MM/yyyy') : 'Không hết hạn' }} <span class="chip" [class.muted]="!active(c)">{{ active(c) ? 'Đang chạy' : 'Đã dừng' }}</span></td>
+        <td>{{ c.usedCount }}{{ c.usageLimit ? ' / ' + c.usageLimit : '' }}</td>
+        <td>@if (active(c)) { <button type="button" class="btn sm" (click)="suspend(c)">Tạm ngưng</button> }</td></tr>
+    } @empty { <tr><td colspan="6" class="muted">Chưa có mã giảm giá.</td></tr> }
+  </tbody></table></div></div>

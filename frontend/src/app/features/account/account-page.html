@@ -1,0 +1,46 @@
+<main class="container wrap">
+  <h1>Tài khoản của tôi</h1>
+  @if (profile(); as p) {
+    <div class="grid">
+      <section class="card anim-fade-up">
+        <h2>Thông tin cá nhân</h2>
+        <p class="points">Điểm HaQua Xanh: <strong>{{ p.greenPoints }}</strong> · SĐT: {{ p.phone }}</p>
+        <form [formGroup]="infoForm" (ngSubmit)="saveInfo()" class="f">
+          <label class="field">Họ và tên<input formControlName="fullName" /></label>
+          <label class="field">Email<input formControlName="email" type="email" /></label>
+          <button class="btn primary" type="submit">Lưu</button>
+        </form>
+        <a routerLink="/tra-cuu-don-hang" class="btn sm">Xem đơn đã mua</a>
+      </section>
+
+      <section class="card anim-fade-up" style="--i:1">
+        <h2>Đổi mật khẩu</h2>
+        <form [formGroup]="passForm" (ngSubmit)="changePassword()" class="f">
+          <label class="field">Mật khẩu cũ<input formControlName="oldPassword" type="password" /></label>
+          <label class="field">Mật khẩu mới<input formControlName="newPassword" type="password" /><span class="muted">Tối thiểu 8 ký tự, có cả chữ và số</span></label>
+          <button class="btn primary" type="submit">Đổi mật khẩu</button>
+        </form>
+      </section>
+
+      <section class="card wide anim-fade-up" style="--i:2">
+        <div class="row"><h2>Sổ địa chỉ</h2><button type="button" class="btn sm" (click)="editAddress(null)">Thêm địa chỉ</button></div>
+        @for (a of p.addresses; track a.id) {
+          <div class="addr" animate.enter="fade-down-in" animate.leave="line-out"><span><strong>{{ a.receiverName }}</strong> · {{ a.phone }}<br />{{ a.detail }}, {{ a.ward }}, {{ a.province }} @if (a.defaultAddress) { <span class="chip">Mặc định</span> }</span>
+            <span class="acts"><button type="button" class="btn sm" (click)="editAddress(a)">Sửa</button><button type="button" class="btn sm danger" (click)="deleteAddress(a)">Xóa</button></span></div>
+        } @empty { <p class="muted">Chưa có địa chỉ nào.</p> }
+
+        @if (editing()) {
+          <form [formGroup]="addrForm" (ngSubmit)="saveAddress()" class="f af" animate.enter="fade-down-in" animate.leave="fade-out">
+            <label class="field">Người nhận<input formControlName="receiverName" /></label>
+            <label class="field">SĐT<input formControlName="phone" /></label>
+            <label class="field">Tỉnh / thành<input formControlName="province" /></label>
+            <label class="field">Phường / xã<input formControlName="ward" /></label>
+            <label class="field full">Địa chỉ cụ thể<input formControlName="detail" /></label>
+            <label class="check"><input type="checkbox" formControlName="defaultAddress" /> Đặt làm mặc định</label>
+            <div class="row"><button class="btn primary" type="submit">Lưu địa chỉ</button><button class="btn" type="button" (click)="editing.set(null)">Hủy</button></div>
+          </form>
+        }
+      </section>
+    </div>
+  }
+</main>

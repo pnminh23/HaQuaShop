@@ -1,0 +1,11 @@
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3306/haqua?useUnicode=true&characterEncoding=utf8&serverTimezone=UTC}
+    username: ${DB_USER:haqua}
+    password: ${DB_PASSWORD:haqua}
+  jpa:
+    hibernate:
+      ddl-auto: update   # TODO: chuyển sang Flyway khi chốt schema
+haqua:
+  seed:
+    enabled: ${HAQUA_SEED_ENABLED:false}

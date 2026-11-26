@@ -1,0 +1,55 @@
+spring:
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 11MB
+  application:
+    name: haqua-backend
+  config:
+    # nạp .env dù chạy từ thư mục backend (mvnw) hay từ thư mục gốc dự án (VS Code / IntelliJ)
+    import: optional:file:.env[.properties],optional:file:./backend/.env[.properties]
+  profiles:
+    default: prod   # MySQL (docker compose). Muốn H2 trong bộ nhớ: SPRING_PROFILES_ACTIVE=dev
+  jpa:
+    open-in-view: false
+    properties:
+      hibernate.jdbc.time_zone: UTC
+
+server:
+  port: ${SERVER_PORT:8080}
+
+haqua:
+  jwt:
+    secret: ${JWT_SECRET:haqua-dev-secret-change-me-haqua-dev-secret-change-me}
+    access-ttl: ${HAQUA_JWT_ACCESS_TTL:15m}
+    refresh-ttl: ${HAQUA_JWT_REFRESH_TTL:7d}
+  cors:
+    allowed-origins: ${CORS_ORIGINS:http://localhost:4200}
+  shop:
+    free-ship-threshold: ${HAQUA_SHOP_FREE_SHIP_THRESHOLD:500000}
+    standard-ship-fee: ${HAQUA_SHOP_STANDARD_SHIP_FEE:30000}
+    express-ship-fee: ${HAQUA_SHOP_EXPRESS_SHIP_FEE:30000}
+    low-stock-threshold: ${HAQUA_SHOP_LOW_STOCK_THRESHOLD:5}
+    qr-expire-minutes: ${HAQUA_SHOP_QR_EXPIRE_MINUTES:30}
+    green-point-rate: ${HAQUA_SHOP_GREEN_POINT_RATE:100000}   # 1 điểm / 100.000đ
+  payment:
+    webhook-secret: ${PAYMENT_WEBHOOK_SECRET:dev-webhook-secret}
+  llm:
+    base-url: ${LLM_BASE_URL:https://api.groq.com/openai/v1}
+    api-key: ${LLM_API_KEY:}
+    model: ${LLM_MODEL:openai/gpt-oss-20b}
+    timeout: ${LLM_TIMEOUT:15s}
+    max-tokens: ${LLM_MAX_TOKENS:1500}
+    temperature: ${LLM_TEMPERATURE:0.3}
+    reasoning-effort: ${LLM_REASONING_EFFORT:low}   # chỉ cho model suy luận (gpt-oss); để trống nếu model không hỗ trợ
+  seed:
+    enabled: ${HAQUA_SEED_ENABLED:true}
+  upload-dir: ${HAQUA_UPLOAD_DIR:uploads}
+  import:
+    dir: ${HAQUA_IMPORT_DIR:}   # thư mục CSV nhập danh mục (tools/out); để trống = không nhập
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

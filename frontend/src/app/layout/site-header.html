@@ -1,0 +1,63 @@
+<header class="header">
+  <div class="topbar">
+    <div class="inner">
+      <span>Miễn phí giao hàng cho đơn từ 500.000₫ · Đổi trả trong 30 ngày</span>
+      <span class="links">
+        <a routerLink="/tra-cuu-don-hang">Tra cứu đơn hàng</a>
+        <a href="tel:">Hotline: [SỐ HOTLINE]</a>
+      </span>
+    </div>
+  </div>
+
+  <div class="main inner">
+    <a routerLink="/" class="logo" aria-label="HaQua – Về trang chủ">
+      <svg width="38" height="38" viewBox="0 0 36 36" aria-hidden="true">
+        <rect width="36" height="36" rx="11" fill="#3E5A43" />
+        <path d="M10.5 25.5c0-8.5 6-14 15.5-14 0 9.5-5.5 15-13.5 15-1.2 0-2-.3-2-1z" fill="none" stroke="#F5F4EF" stroke-width="2" stroke-linejoin="round" />
+        <path d="M11.5 25c3-4.5 6.5-7.5 10.5-9.5" fill="none" stroke="#F5F4EF" stroke-width="2" stroke-linecap="round" />
+      </svg>
+      <span>Ha<b>Qua</b></span>
+    </a>
+
+    <form class="search" role="search" (submit)="$event.preventDefault(); search()">
+      <input type="search" aria-label="Tìm kiếm sản phẩm" placeholder="Tìm laptop, điện thoại, tai nghe…"
+             [ngModel]="query()" (ngModelChange)="onType($event)" name="q" autocomplete="off" />
+      <button type="submit" class="btn primary sm">Tìm kiếm</button>
+      @if (suggestions().length) {
+        <ul class="suggest" role="listbox" animate.enter="fade-down-in" animate.leave="fade-out">
+          @for (s of suggestions(); track s.slug) {
+            <li><button type="button" role="option" (click)="pick(s.slug)">{{ s.name }}<span>{{ s.price | vnd }}</span></button></li>
+          }
+        </ul>
+      }
+    </form>
+
+    <div class="actions">
+      @if (auth.user(); as u) {
+        <a routerLink="/tai-khoan" class="round" [attr.aria-label]="'Tài khoản ' + u.fullName" [title]="u.fullName">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>
+        </a>
+        @if (auth.isStaff()) { <a routerLink="/admin" class="btn sm">Quản trị</a> }
+        <button type="button" class="btn sm" (click)="auth.logout()">Đăng xuất</button>
+      } @else {
+        <a routerLink="/dang-nhap" class="btn sm">Đăng nhập</a>
+        <a routerLink="/dang-ky" class="btn sm primary">Đăng ký</a>
+      }
+      <a routerLink="/gio-hang" class="cart" [attr.aria-label]="'Giỏ hàng, ' + cart.count() + ' sản phẩm'">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4h2l2.4 11h10.2L20 8H6.2"/><circle cx="9" cy="19.5" r="1.5"/><circle cx="17" cy="19.5" r="1.5"/></svg>
+        Giỏ hàng <span class="count" [class.bump]="bump()">{{ cart.count() }}</span>
+      </a>
+    </div>
+  </div>
+
+  <nav class="inner nav" aria-label="Danh mục chính">
+    <ul>
+      @for (n of nav; track n.label) {
+        <li>
+          <a [routerLink]="n.link" [queryParams]="n.query" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: n.exact }"
+             [class.sale]="n.label === 'Khuyến mãi'">{{ n.label }}</a>
+        </li>
+      }
+    </ul>
+  </nav>
+</header>
