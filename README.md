@@ -9,17 +9,22 @@ Code theo bản thiết kế và tài liệu nghiệp vụ (22 use case).
 
 ## Chạy thử
 
+Cần JDK 21, Node và MySQL đang chạy (cấu hình trong `backend/.env`, mẫu ở `backend/.env.example`).
+
 ```bash
-# 1. Backend (cổng 8080) – cần JDK 21, dữ liệu mẫu tự nạp (profile dev, H2 trong bộ nhớ)
-cd backend && ./mvnw spring-boot:run
+# Cài thư viện frontend (chỉ lần đầu)
+cd frontend && npm install && cd ..
 
-# 2. Frontend (cổng 4200) – `npm start` chạy `ng serve`
-cd frontend && npm install && npm start
+# Chạy cả backend (profile dev, cổng 8080) và frontend (cổng 4200); Ctrl+C để tắt cả hai
+npm run dev
 
-# Cấu hình (tùy chọn): cp backend/.env.example backend/.env ; cp frontend/.env.example frontend/.env
+# Đổi cổng khi cổng mặc định đang bận
+BACKEND_PORT=8089 FRONTEND_PORT=4201 npm run dev
 ```
 
-Tài khoản mẫu (chỉ có ở profile dev): `admin@haqua.vn / Admin@123`, `staff@haqua.vn / Staff@123`, `khach@haqua.vn / Khach@123`. Mã giảm giá mẫu: `HAQUA10`.
+`npm run dev` (xem `scripts/dev.mjs`) tự tìm JDK 21 của SDKMAN nếu `java` mặc định cũ hơn, và dùng thư mục ảnh `backend/uploads` (đặt biến `HAQUA_UPLOAD_DIR` trong shell nếu muốn đổi).
+
+Tài khoản mẫu (chỉ được nạp ở profile dev khi bảng người dùng còn trống): `admin@haqua.vn / Admin@123`, `staff@haqua.vn / Staff@123`, `khach@haqua.vn / Khach@123`. Mã giảm giá mẫu: `HAQUA10`.
 
 Chạy với MySQL: `cd backend && cp .env.example .env && docker compose up -d db`, rồi `SPRING_PROFILES_ACTIVE=prod JWT_SECRET=<chuỗi ≥ 32 ký tự> ./mvnw spring-boot:run`.
 
