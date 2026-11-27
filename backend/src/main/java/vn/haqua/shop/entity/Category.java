@@ -31,6 +31,15 @@ public class Category extends BaseEntity {
 
     private int sortOrder;
 
+    /** Ẩn khỏi cửa hàng cùng mọi sản phẩm thuộc nó. Trạng thái sản phẩm giữ nguyên nên hiện lại là như cũ. */
+    @Column(name = "hidden")
+    private Boolean hidden;
+
+    /** Khách có được thấy không: bản thân và mọi danh mục cha đều không bị ẩn. */
+    public boolean isShown() {
+        return !Boolean.TRUE.equals(hidden) && (parent == null || parent.isShown());
+    }
+
     public Category(String name, String slug, String seoDescription, int sortOrder) {
         this.name = name;
         this.slug = slug;

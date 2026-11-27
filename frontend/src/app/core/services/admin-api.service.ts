@@ -14,9 +14,10 @@ import {
   Coupon,
   CustomerRow,
   Dashboard,
+  DashboardPeriod,
   SeoReport,
 } from '../models/admin.model';
-import { Category, ProductDetail } from '../models/catalog.model';
+import { Category, CategoryRequest, ProductDetail } from '../models/catalog.model';
 import { Banner, BannerRequest } from '../models/banner.model';
 import { Page } from '../models/common.model';
 import { OrderDetail, OrderRow } from '../models/order.model';
@@ -27,12 +28,12 @@ export class AdminApiService {
   private readonly http = inject(HttpClient);
   private readonly base = `${API_URL}/admin`;
 
-  dashboard(range: number): Observable<Dashboard> {
-    return this.http.get<Dashboard>(`${this.base}/dashboard`, { params: { range } });
+  dashboard(period: DashboardPeriod): Observable<Dashboard> {
+    return this.http.get<Dashboard>(`${this.base}/dashboard`, { params: { ...period } });
   }
 
-  exportDashboard(range: number): Observable<Blob> {
-    return this.http.get(`${this.base}/dashboard/export`, { params: { range }, responseType: 'blob' });
+  exportDashboard(period: DashboardPeriod): Observable<Blob> {
+    return this.http.get(`${this.base}/dashboard/export`, { params: { ...period }, responseType: 'blob' });
   }
 
   // --- sản phẩm & SEO ---
@@ -103,8 +104,25 @@ export class AdminApiService {
     return this.http.post<Brand>(`${this.base}/brands`, { name, computerBrand });
   }
 
+  /** Gồm cả danh mục đang ẩn. */
   categories(): Observable<Category[]> {
-    return this.http.get<Category[]>(`${API_URL}/categories`);
+    return this.http.get<Category[]>(`${this.base}/categories`);
+  }
+
+  createCategory(body: CategoryRequest): Observable<Category> {
+    return this.http.post<Category>(`${this.base}/categories`, body);
+  }
+
+  updateCategory(id: number, body: CategoryRequest): Observable<Category> {
+    return this.http.put<Category>(`${this.base}/categories/${id}`, body);
+  }
+
+  setCategoryHidden(id: number, hidden: boolean): Observable<Category> {
+    return this.http.put<Category>(`${this.base}/categories/${id}/visibility`, { hidden });
+  }
+
+  deleteCategory(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.base}/categories/${id}`);
   }
 
   // --- đơn hàng ---

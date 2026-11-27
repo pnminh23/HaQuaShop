@@ -3,8 +3,13 @@ import { ProductStatus } from './common.model';
 import { ConversationStatus, ChatMessage } from './chat.model';
 
 export interface Kpi { label: string; value: number; changePercent: number }
+/** Kỳ báo cáo: N ngày gần nhất, hoặc khoảng ngày tự chọn (yyyy-MM-dd). */
+export type DashboardPeriod = { range: number } | { from: string; to: string };
+
 export interface Dashboard {
   rangeDays: number;
+  from: string;
+  to: string;
   kpis: Kpi[];
   revenueByDay: { date: string; revenue: number }[];
   revenueByCategory: { category: string; revenue: number; percent: number }[];

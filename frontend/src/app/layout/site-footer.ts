@@ -1,4 +1,7 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { catchError, of } from 'rxjs';
+import { CatalogService } from '../core/services/catalog.service';
 import { RouterLink } from '@angular/router';
 
 @Component({
@@ -14,9 +17,11 @@ import { RouterLink } from '@angular/router';
         </div>
         <nav aria-label="Mua sắm">
           <h2>Mua sắm</h2>
-          <a routerLink="/san-pham" [queryParams]="{ category: 'may-tinh' }">Máy tính</a>
-          <a routerLink="/san-pham" [queryParams]="{ category: 'dien-thoai' }">Điện thoại</a>
-          <a routerLink="/san-pham" [queryParams]="{ category: 'tai-nghe' }">Tai nghe</a>
+          @for (c of categories(); track c.id) {
+            <a routerLink="/san-pham" [queryParams]="{ category: c.slug }">{{ c.name }}</a>
+          } @empty {
+            <a routerLink="/san-pham">Tất cả sản phẩm</a>
+          }
         </nav>
         <nav aria-label="Hỗ trợ">
           <h2>Hỗ trợ</h2>
@@ -46,4 +51,7 @@ import { RouterLink } from '@angular/router';
     .copy { margin-top: 32px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,.15); font-size: 13px; color: #a9bfa0; }
   `,
 })
-export class SiteFooter {}
+export class SiteFooter {
+  /** Chỉ gồm danh mục đang hiện trên cửa hàng. */
+  protected readonly categories = toSignal(inject(CatalogService).categories().pipe(catchError(() => of([]))), { initialValue: [] });
+}

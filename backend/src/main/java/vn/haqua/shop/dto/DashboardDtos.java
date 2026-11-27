@@ -26,7 +26,7 @@ public final class DashboardDtos {
     public record LowStock(Long variantId, String productName, String variant, int stock) {
     }
 
-    public record Dashboard(int rangeDays, List<Kpi> kpis, List<DayRevenue> revenueByDay,
+    public record Dashboard(int rangeDays, LocalDate from, LocalDate to, List<Kpi> kpis, List<DayRevenue> revenueByDay,
                             List<CategoryRevenue> revenueByCategory, List<OrderRowDto> recentOrders,
                             List<TopProduct> topProducts, List<LowStock> lowStock) {
     }

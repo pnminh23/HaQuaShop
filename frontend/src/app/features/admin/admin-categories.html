@@ -1,0 +1,40 @@
+<div class="page-head"><div><h1>Danh mục sản phẩm</h1><p>Ẩn một danh mục thì khách không còn thấy danh mục đó và mọi sản phẩm bên trong (tìm kiếm, trang chi tiết, giỏ hàng, chatbot). Hiện lại thì mọi thứ về như cũ. Tải lại trang cửa hàng để thấy thay đổi.</p></div></div>
+
+<form class="card row" style="margin-bottom: 20px" (submit)="$event.preventDefault(); add(nameInput)">
+  <input #nameInput class="input" style="max-width: 360px" aria-label="Tên danh mục mới" placeholder="Tên danh mục mới, VD: Phụ kiện" maxlength="100" />
+  <button type="submit" class="btn primary">Thêm</button>
+  @if (error()) { <span class="error-text" animate.enter="fade-down-in">{{ error() }}</span> }
+</form>
+
+<div class="card"><div class="table-wrap"><table class="table">
+  <thead><tr><th>Danh mục</th><th>Đường dẫn</th><th>Sản phẩm</th><th>Trên cửa hàng</th><th></th></tr></thead>
+  <tbody>
+    @for (c of categories(); track c.id) {
+      <tr>
+        <td>
+          @if (editingId() === c.id) {
+            <input class="input" style="max-width: 280px" [value]="draft()" maxlength="100" aria-label="Tên danh mục"
+              (input)="draft.set($any($event.target).value)" (keyup.enter)="save(c)" (keyup.escape)="editingId.set(null)" />
+          } @else { <strong>{{ c.name }}</strong> }
+        </td>
+        <td><small class="muted">{{ c.slug }}</small></td>
+        <td>{{ c.productCount }}</td>
+        <td>
+          <label class="row">
+            <input type="checkbox" role="switch" [checked]="!c.hidden" [disabled]="busyId() === c.id"
+              (click)="$event.preventDefault(); toggle(c)" [attr.aria-label]="'Hiện danh mục ' + c.name + ' trên cửa hàng'" />
+            {{ c.hidden ? 'Đang ẩn' : 'Đang hiện' }}
+          </label>
+        </td>
+        <td class="row">
+          @if (editingId() === c.id) {
+            <button type="button" class="btn sm primary" (click)="save(c)">Lưu</button>
+            <button type="button" class="btn sm" (click)="editingId.set(null)">Hủy</button>
+          } @else {
+            <button type="button" class="btn sm" (click)="startEdit(c)">Đổi tên</button>
+            <button type="button" class="btn sm danger" [disabled]="c.productCount > 0" [attr.title]="c.productCount > 0 ? 'Còn sản phẩm, chỉ ẩn được' : null" (click)="remove(c)">Xóa</button>
+          }
+        </td>
+      </tr>
+    } @empty { <tr><td colspan="5" class="muted">Chưa có danh mục.</td></tr> }
+  </tbody></table></div></div>

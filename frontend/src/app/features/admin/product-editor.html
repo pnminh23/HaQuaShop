@@ -5,7 +5,7 @@
 
       <div class="form-grid">
         <label class="field full">Tên sản phẩm<input formControlName="name" (input)="onName()" /></label>
-        <label class="field">Danh mục<select formControlName="categoryId"><option [ngValue]="0" disabled>Chọn danh mục</option>@for (c of categories(); track c.id) { <option [ngValue]="c.id">{{ c.name }}</option> }</select></label>
+        <label class="field">Danh mục<select formControlName="categoryId"><option [ngValue]="0" disabled>Chọn danh mục</option>@for (c of categories(); track c.id) { <option [ngValue]="c.id">{{ c.name }}{{ c.hidden ? ' (đang ẩn trên cửa hàng)' : '' }}</option> }</select></label>
         <div class="field combo">
           <label for="brand-input">Thương hiệu</label>
           <input id="brand-input" role="combobox" autocomplete="off" aria-autocomplete="list" aria-controls="brand-list" [attr.aria-expanded]="brandOpen()"

@@ -31,6 +31,7 @@ export class AdminLayout {
       { label: 'Tổng quan', link: '/admin', adminOnly: true },
       { label: 'Đơn hàng', link: '/admin/don-hang' },
       { label: 'Sản phẩm & SEO', link: '/admin/san-pham', adminOnly: true },
+      { label: 'Danh mục', link: '/admin/danh-muc', adminOnly: true },
       { label: 'Thương hiệu', link: '/admin/thuong-hieu', adminOnly: true },
       { label: 'Banner trang chủ', link: '/admin/banner', adminOnly: true },
       { label: 'Khuyến mãi', link: '/admin/khuyen-mai', adminOnly: true },

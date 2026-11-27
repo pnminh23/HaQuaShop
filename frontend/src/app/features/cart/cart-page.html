@@ -8,6 +8,7 @@
   @if (!cart().items.length) {
     <div class="card empty anim-pop">
       <h2>Giỏ hàng đang trống</h2>
+      @if (cart().notice) { <p role="status">{{ cart().notice }}</p> }
       <p class="muted">Khám phá sản phẩm hoặc hỏi trợ lý AI để được gợi ý phù hợp.</p>
       <a routerLink="/san-pham" class="btn primary">Tiếp tục mua sắm</a>
     </div>

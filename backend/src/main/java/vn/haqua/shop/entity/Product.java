@@ -105,6 +105,11 @@ public class Product extends BaseEntity {
         }
     }
 
+    /** Khách có được thấy và mua không: cả trạng thái sản phẩm lẫn danh mục đều phải cho phép. */
+    public boolean isOnSaleToCustomers() {
+        return status.isVisible() && category.isShown();
+    }
+
     public String mainImageUrl() {
         return images.isEmpty() ? null : images.get(0).getUrl();
 

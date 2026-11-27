@@ -43,7 +43,7 @@ export class AdminProducts {
 
   constructor() {
     inject(SeoService).set('Quản trị · Sản phẩm & SEO | HaQua');
-    this.api.categories().subscribe((c: Category[]) => this.categoryOptions.set(c.map((x) => ({ value: String(x.id), label: x.name }))));
+    this.api.categories().subscribe((c: Category[]) => this.categoryOptions.set(c.map((x) => ({ value: String(x.id), label: x.hidden ? `${x.name} (đang ẩn)` : x.name }))));
     // switchMap: kết quả cũ về muộn không đè lên kết quả của lần lọc/tìm mới nhất
     this.reload$
       .pipe(switchMap(() => this.api.products(this.status() || null, Number(this.categoryId()) || null, this.q(), this.page())), takeUntilDestroyed())

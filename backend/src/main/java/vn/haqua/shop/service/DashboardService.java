@@ -2,6 +2,7 @@ package vn.haqua.shop.service;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,6 +15,7 @@ import vn.haqua.shop.config.AppProperties;
 import vn.haqua.shop.dto.DashboardDtos.*;
 import vn.haqua.shop.dto.OrderDtos.OrderRowDto;
 import vn.haqua.shop.enums.Role;
+import vn.haqua.shop.exception.ApiException;
 import vn.haqua.shop.repository.CartRepository;
 import vn.haqua.shop.repository.OrderItemRepository;
 import vn.haqua.shop.repository.OrderRepository;
@@ -27,6 +29,8 @@ public class DashboardService {
 
     private static final ZoneId ZONE = ZoneId.of("Asia/Ho_Chi_Minh");
 
+    private static final int MAX_DAYS = 366;
+
     private final OrderRepository orders;
     private final OrderItemRepository items;
     private final UserRepository users;
@@ -34,13 +38,15 @@ public class DashboardService {
     private final ProductVariantRepository variants;
     private final AppProperties props;
 
+    /** Có fromDate + toDate thì lấy đúng khoảng đó, không thì lấy rangeDays ngày gần nhất. */
     @Transactional(readOnly = true)
-    public Dashboard build(int rangeDays) {
-        int days = List.of(7, 14, 30).contains(rangeDays) ? rangeDays : 14;
-        LocalDate today = LocalDate.now(ZONE);
-        var from = today.minusDays(days - 1L).atStartOfDay(ZONE).toInstant();
-        var to = today.plusDays(1).atStartOfDay(ZONE).toInstant();
-        var prevFrom = today.minusDays(2L * days - 1).atStartOfDay(ZONE).toInstant();
+    public Dashboard build(int rangeDays, LocalDate fromDate, LocalDate toDate) {
+        Period period = Period.of(rangeDays, fromDate, toDate, LocalDate.now(ZONE));
+        LocalDate first = period.from();
+        int days = period.days();
+        var from = first.atStartOfDay(ZONE).toInstant();
+        var to = period.to().plusDays(1).atStartOfDay(ZONE).toInstant();
+        var prevFrom = first.minusDays(days).atStartOfDay(ZONE).toInstant();
 
         long revenue = orders.revenueBetween(from, to), prevRevenue = orders.revenueBetween(prevFrom, from);
         long count = orders.countBetween(from, to), prevCount = orders.countBetween(prevFrom, from);
@@ -57,7 +63,7 @@ public class DashboardService {
 
         List<DayRevenue> series = new ArrayList<>();
         for (int i = 0; i < days; i++) {
-            LocalDate d = today.minusDays(days - 1L - i);
+            LocalDate d = first.plusDays(i);
             series.add(new DayRevenue(d, orders.revenueBetween(d.atStartOfDay(ZONE).toInstant(),
                     d.plusDays(1).atStartOfDay(ZONE).toInstant())));
         }
@@ -74,15 +80,44 @@ public class DashboardService {
         List<LowStock> low = variants.findLowStock(props.shop().lowStockThreshold()).stream().limit(10)
                 .map(v -> new LowStock(v.getId(), v.getProduct().getName(), v.label(), v.getStock())).toList();
 
-        return new Dashboard(days, kpis, series, byCat, recent, top, low);
+        return new Dashboard(days, first, period.to(), kpis, series, byCat, recent, top, low);
     }
 
     /** CSV (mở được bằng Excel) của doanh thu theo ngày trong khoảng đang chọn. */
     @Transactional(readOnly = true)
-    public String exportCsv(int rangeDays) {
+    public String exportCsv(int rangeDays, LocalDate fromDate, LocalDate toDate) {
         StringBuilder sb = new StringBuilder("﻿Ngày,Doanh thu (VND)\n");
-        build(rangeDays).revenueByDay().forEach(d -> sb.append(d.date()).append(',').append(d.revenue()).append('\n'));
+        build(rangeDays, fromDate, toDate).revenueByDay().forEach(d -> sb.append(d.date()).append(',').append(d.revenue()).append('\n'));
         return sb.toString();
+    }
+
+    /** Khoảng ngày của báo cáo, tính cả hai đầu. */
+    private record Period(LocalDate from, LocalDate to) {
+
+        static Period of(int rangeDays, LocalDate from, LocalDate to, LocalDate today) {
+            if (from == null && to == null) {
+                int days = List.of(7, 14, 30).contains(rangeDays) ? rangeDays : 14;
+                return new Period(today.minusDays(days - 1L), today);
+            }
+            if (from == null || to == null) {
+                throw ApiException.badRequest("Vui lòng chọn đủ ngày bắt đầu và ngày kết thúc");
+            }
+            if (from.isAfter(to)) {
+                throw ApiException.badRequest("Ngày bắt đầu phải trước hoặc trùng ngày kết thúc");
+            }
+            if (from.isAfter(today)) {
+                throw ApiException.badRequest("Ngày bắt đầu không được ở tương lai");
+            }
+            Period period = new Period(from, to.isAfter(today) ? today : to);
+            if (period.days() > MAX_DAYS) {
+                throw ApiException.badRequest("Chỉ xem được tối đa " + MAX_DAYS + " ngày mỗi lần");
+            }
+            return period;
+        }
+
+        int days() {
+            return (int) ChronoUnit.DAYS.between(from, to) + 1;
+        }
     }
 
     private static double change(double now, double prev) {

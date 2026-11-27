@@ -7,7 +7,7 @@ Dùng:  python3 tools/fptshop_crawl.py may-tinh-xach-tay --limit 30 --delay 2.5
 """
 import argparse, csv, json, re, sys, time, urllib.request, urllib.error, urllib.robotparser
 from pathlib import Path
-from urllib.parse import urlparse
+from urllib.parse import quote, urlparse
 
 BASE = 'https://fptshop.com.vn'
 UA = 'Mozilla/5.0 (compatible; HaQuaCatalogTool/1.0)'
@@ -19,6 +19,7 @@ class Stop(Exception):
 
 
 def get(url: str, binary=False):
+    url = quote(url, safe=":/?&=%#+,;@!$'()*~")  # một số link ảnh có dấu cách
     req = urllib.request.Request(url, headers={'User-Agent': UA})
     try:
         with urllib.request.urlopen(req, timeout=30) as r:
@@ -113,7 +114,7 @@ def refill(a, rp):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('category', help='vd: dien-thoai, may-tinh-xach-tay, smartwatch, may-tinh-bang')
-    ap.add_argument('--sitemap', help='tên sitemap nguồn nếu khác danh mục, vd: phu-kien')
+    ap.add_argument('--sitemap', help='tên sitemap nguồn nếu khác danh mục, nhiều cái cách nhau dấu phẩy, vd: phu-kien,phu-kien-1')
     ap.add_argument('--match', default='', help='chỉ lấy URL chứa chuỗi này, vd: /phu-kien/tai-nghe')
     ap.add_argument('--refill', action='store_true', help='chỉ lấy lại gallery cho dòng CSV hiện có ≤1 ảnh (không duyệt sitemap)')
     ap.add_argument('--append', action='store_true', help='giữ các dòng CSV đã có, lấy thêm --limit sản phẩm mới')
@@ -126,8 +127,8 @@ def main():
 
     if a.refill:
         return refill(a, rp)
-    sm = get(f'{BASE}/products/sitemap-{a.sitemap or a.category}.xml')
-    urls = [u for u in re.findall(r'<loc>([^<]+)</loc>', sm) if urlparse(u).path.count('/') >= 2 and a.match in u]
+    sm = ''.join(get(f'{BASE}/products/sitemap-{s}.xml') for s in (a.sitemap or a.category).split(','))
+    urls = [u for u in dict.fromkeys(re.findall(r'<loc>([^<]+)</loc>', sm)) if urlparse(u).path.count('/') >= 2 and a.match in u]
     img_dir = OUT / 'images' / a.category
     img_dir.mkdir(parents=True, exist_ok=True)
     out = OUT / f'{a.category}.csv'

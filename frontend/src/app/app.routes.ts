@@ -32,6 +32,7 @@ export const routes: Routes = [
       { path: 'don-hang/:id', loadComponent: () => import('./features/admin/admin-order-detail').then((m) => m.AdminOrderDetail) },
       { path: 'san-pham', canActivate: [adminGuard], loadComponent: () => import('./features/admin/admin-products').then((m) => m.AdminProducts) },
       { path: 'san-pham/:id', canActivate: [adminGuard], loadComponent: () => import('./features/admin/admin-product-detail').then((m) => m.AdminProductDetail) },
+      { path: 'danh-muc', canActivate: [adminGuard], loadComponent: () => import('./features/admin/admin-categories').then((m) => m.AdminCategories) },
       { path: 'thuong-hieu', canActivate: [adminGuard], loadComponent: () => import('./features/admin/admin-brands').then((m) => m.AdminBrands) },
       { path: 'banner', canActivate: [adminGuard], loadComponent: () => import('./features/admin/admin-banners').then((m) => m.AdminBanners) },
       { path: 'khuyen-mai', canActivate: [adminGuard], loadComponent: () => import('./features/admin/admin-coupons').then((m) => m.AdminCoupons) },

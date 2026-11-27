@@ -31,13 +31,14 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
 
     long countByCategoryId(Long categoryId);
 
-    List<Product> findByStatusInAndNameUnaccentContaining(Collection<ProductStatus> statuses, String q, Pageable pageable);
+    List<Product> findByStatusInAndNameUnaccentContainingAndCategoryIdNotIn(Collection<ProductStatus> statuses, String q,
+                                                                          Collection<Long> categoryIds, Pageable pageable);
 
     List<Product> findByCategoryIdAndStatusInAndIdNot(Long categoryId, Collection<ProductStatus> statuses, Long id, Pageable pageable);
 
-    List<Product> findByStatusIn(Collection<ProductStatus> statuses, Pageable pageable);
+    List<Product> findByStatusInAndCategoryIdNotIn(Collection<ProductStatus> statuses, Collection<Long> categoryIds, Pageable pageable);
 
-    @Query("select p.category.slug, count(p) from Product p where p.status in :statuses group by p.category.slug")
-    List<Object[]> countByCategory(Collection<ProductStatus> statuses);
+    @Query("select p.category.slug, count(p) from Product p where p.status in :statuses and p.category.id not in :hidden group by p.category.slug")
+    List<Object[]> countByCategory(Collection<ProductStatus> statuses, Collection<Long> hidden);
 
 }

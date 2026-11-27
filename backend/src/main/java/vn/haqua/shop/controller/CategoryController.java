@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 import vn.haqua.shop.dto.CatalogDtos.CategoryDto;
 import vn.haqua.shop.dto.CatalogDtos.CategoryRequest;
+import vn.haqua.shop.dto.CatalogDtos.CategoryVisibilityRequest;
 import vn.haqua.shop.service.CategoryService;
 
 @RestController
@@ -22,6 +23,17 @@ public class CategoryController {
     @GetMapping("/api/categories")
     List<CategoryDto> list() {
         return service.list();
+    }
+
+    @GetMapping("/api/admin/categories")
+    List<CategoryDto> listAll() {
+        return service.listAll();
+    }
+
+    @PutMapping("/api/admin/categories/{id}/visibility")
+    @PreAuthorize("hasRole('ADMIN')")
+    CategoryDto setVisibility(@PathVariable Long id, @Valid @RequestBody CategoryVisibilityRequest req) {
+        return service.setHidden(id, req.hidden());
     }
 
     @PostMapping("/api/admin/categories")

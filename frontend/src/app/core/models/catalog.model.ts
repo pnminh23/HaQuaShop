@@ -72,6 +72,13 @@ export interface MenuBrand {
   slug: string;
 }
 
+export interface CategoryRequest {
+  name: string;
+  slug?: string;
+  seoDescription?: string;
+  parentId?: number | null;
+}
+
 export interface Category {
   id: number;
   name: string;
@@ -79,6 +86,8 @@ export interface Category {
   seoDescription: string;
   parentId: number | null;
   productCount: number;
+  /** Đang ẩn khỏi cửa hàng (chỉ trang quản trị nhận được danh mục ẩn). */
+  hidden: boolean;
 }
 
 export interface Review {

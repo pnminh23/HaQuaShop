@@ -16,7 +16,8 @@ import vn.haqua.shop.repository.ProductRepository;
 class KnowledgeRetrieverTest {
 
     private final KnowledgeSourceRepository sources = mock(KnowledgeSourceRepository.class);
-    private final KnowledgeRetriever retriever = new KnowledgeRetriever(mock(ProductRepository.class), sources);
+    private final KnowledgeRetriever retriever = new KnowledgeRetriever(mock(ProductRepository.class), sources,
+            mock(vn.haqua.shop.repository.CategoryRepository.class));
 
     private static KnowledgeSource source(KnowledgeType type, String content) {
         KnowledgeSource s = mock(KnowledgeSource.class);

@@ -1,6 +1,7 @@
 package vn.haqua.shop.repository;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import jakarta.persistence.criteria.Predicate;
@@ -18,10 +19,11 @@ public final class ProductSpecifications {
     private ProductSpecifications() {
     }
 
-    public static Specification<Product> from(ProductFilter f) {
+    public static Specification<Product> from(ProductFilter f, Collection<Long> hiddenCategoryIds) {
         return (root, query, cb) -> {
             List<Predicate> p = new ArrayList<>();
             p.add(root.get("status").in(ProductStatus.ACTIVE, ProductStatus.OUT_OF_STOCK));
+            p.add(cb.not(root.get("category").get("id").in(hiddenCategoryIds)));
             if (f.q() != null && !f.q().isBlank()) {
                 p.add(cb.like(root.get("nameUnaccent"), "%" + SlugUtil.unaccent(f.q().trim()) + "%"));
             }

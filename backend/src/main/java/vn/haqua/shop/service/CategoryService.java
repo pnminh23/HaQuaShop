@@ -22,9 +22,23 @@ public class CategoryService {
     private final CategoryRepository categories;
     private final ProductRepository products;
 
+    /** Cho cửa hàng: chỉ danh mục đang hiện. */
     @Transactional(readOnly = true)
     public List<CategoryDto> list() {
+        return categories.findAllByOrderBySortOrderAscIdAsc().stream().filter(Category::isShown).map(this::toDto).toList();
+    }
+
+    /** Cho quản trị: mọi danh mục, kèm trạng thái ẩn. */
+    @Transactional(readOnly = true)
+    public List<CategoryDto> listAll() {
         return categories.findAllByOrderBySortOrderAscIdAsc().stream().map(this::toDto).toList();
+    }
+
+    @Transactional
+    public CategoryDto setHidden(Long id, boolean hidden) {
+        Category c = categories.findById(id).orElseThrow(() -> ApiException.notFound("Không thấy danh mục"));
+        c.setHidden(hidden);
+        return toDto(c);
     }
 
     @Transactional
@@ -67,7 +81,8 @@ public class CategoryService {
 
     private CategoryDto toDto(Category c) {
         return new CategoryDto(c.getId(), c.getName(), c.getSlug(), c.getSeoDescription(),
-                c.getParent() == null ? null : c.getParent().getId(), products.countByCategoryId(c.getId()));
+                c.getParent() == null ? null : c.getParent().getId(), products.countByCategoryId(c.getId()),
+                Boolean.TRUE.equals(c.getHidden()));
 
     }
 }

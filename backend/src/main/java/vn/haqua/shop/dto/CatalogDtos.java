@@ -49,7 +49,7 @@ public final class CatalogDtos {
     }
 
     public record CategoryDto(Long id, String name, String slug, String seoDescription, Long parentId,
-                              long productCount) {
+                              long productCount, boolean hidden) {
     }
 
     // ---------- Admin ----------
@@ -87,6 +87,9 @@ public final class CatalogDtos {
     }
 
     public record SeoReport(int score, List<SeoCriterion> criteria) {
+    }
+
+    public record CategoryVisibilityRequest(@NotNull Boolean hidden) {
     }
 
     public record CategoryRequest(@NotBlank String name, String slug, String seoDescription, Long parentId) {

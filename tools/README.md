@@ -4,6 +4,9 @@
     python3 tools/fptshop_crawl.py dien-thoai --limit 30
     python3 tools/fptshop_crawl.py may-tinh-xach-tay --limit 30
     python3 tools/fptshop_crawl.py tai-nghe --sitemap phu-kien --match /phu-kien/tai-nghe --limit 30
+    python3 tools/fptshop_crawl.py chuot --sitemap phu-kien,phu-kien-1,phu-kien-2 --match /phu-kien/chuot- --limit 30
+    python3 tools/fptshop_crawl.py ban-phim --sitemap phu-kien,phu-kien-1,phu-kien-2 --match /phu-kien/ban-phim- --limit 30
+
 Thêm `--append` để giữ dữ liệu cũ và lấy thêm `--limit` sản phẩm mới.
 Kết quả: `tools/out/<danh-muc>.csv` + ảnh trong `tools/out/images/`.
 

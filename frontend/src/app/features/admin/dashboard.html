@@ -1,10 +1,26 @@
 <div class="page-head">
-  <div><h1>Tổng quan</h1><p>Số liệu {{ range() }} ngày gần nhất, so với kỳ liền trước</p></div>
+  <div><h1>Tổng quan</h1>
+    <p>
+      {{ range() ? range() + ' ngày gần nhất' : data() ? (data()!.from | date: 'dd/MM/yyyy') + ' – ' + (data()!.to | date: 'dd/MM/yyyy') + ' (' + data()!.rangeDays + ' ngày)' : 'Khoảng ngày đã chọn' }}, so với kỳ liền trước cùng độ dài
+    </p></div>
   <div class="row">
-    @for (r of ranges; track r) { <button type="button" class="tab" [attr.aria-pressed]="range() === r" (click)="range.set(r)">{{ r }} ngày</button> }
+    @for (r of ranges; track r) { <button type="button" class="tab" [attr.aria-pressed]="range() === r" (click)="pickRange(r)">{{ r }} ngày</button> }
     <button type="button" class="btn sm" (click)="export()">Xuất báo cáo (CSV)</button>
   </div>
 </div>
+
+<form class="row period" (submit)="$event.preventDefault(); applyDates()">
+  <label>Tháng
+    <select #monthSelect (change)="pickMonth(monthSelect.value)">
+      <option value="" [selected]="!month()">Chọn tháng…</option>
+      @for (m of months; track m.value) { <option [value]="m.value" [selected]="month() === m.value">{{ m.label }}</option> }
+    </select>
+  </label>
+  <label>Từ ngày <input #fromInput type="date" [max]="today" [value]="fromDate()" (input)="fromDate.set(fromInput.value)" /></label>
+  <label>Đến ngày <input #toInput type="date" [max]="today" [value]="toDate()" (input)="toDate.set(toInput.value)" /></label>
+  <button type="submit" class="btn sm">Xem</button>
+</form>
+@if (error()) { <p class="period-error" role="alert">{{ error() }}</p> }
 
 @if (data(); as d) {
   <div class="stack">
@@ -20,12 +36,13 @@
       <section class="card">
         <h2>Doanh thu theo ngày</h2>
         @if (picked(); as p) { <p [attr.data-k]="p.date"><strong class="anim-pop">{{ p.revenue | vnd }}</strong> <span class="muted">· {{ p.date | date: 'dd/MM' }} (bấm cột để xem ngày khác)</span></p> }
-        <div class="chart" role="group" aria-label="Biểu đồ doanh thu">
+        <div class="chart" [class.dense]="bars().length > 31" role="group" aria-label="Biểu đồ doanh thu">
           @for (b of bars(); track b.date) {
             <button type="button" class="bar" [class.on]="b.i === (selected() ?? bars().length - 1)" (click)="selected.set(b.i)"
                     [style.--i]="b.i" [attr.aria-label]="(b.date | date: 'dd/MM') + ': ' + b.revenue + ' đồng'"><span [style.height.%]="b.pct"></span><small>{{ b.date | date: 'dd' }}</small></button>
           }
         </div>
+        @if (bars().length > 31) { <div class="row between muted"><small>{{ d.from | date: 'dd/MM/yyyy' }}</small><small>{{ d.to | date: 'dd/MM/yyyy' }}</small></div> }
       </section>
       <section class="card">
         <h2>Doanh thu theo danh mục</h2>
@@ -52,7 +69,7 @@
         @for (l of d.lowStock; track l.variantId) { <div class="row between top"><span>{{ l.productName }} <small class="muted">{{ l.variant }}</small></span><span class="chip warn">còn {{ l.stock }}</span></div> } @empty { <p class="muted">Tồn kho ổn định.</p> }</section>
     </div>
   </div>
-} @else {
+} @else if (!error()) {
   <div class="kpis" aria-busy="true">@for (n of [1, 2, 3, 4]; track n) { <div class="skeleton" style="height: 110px"></div> }</div>
   <div class="skeleton" style="height: 260px; margin-top: 20px"></div>
 }

@@ -49,7 +49,14 @@ public class CatalogImporter implements ApplicationRunner {
     private static final Map<String, String> FILES = Map.of(
             "dien-thoai.csv", "dien-thoai",
             "may-tinh-xach-tay.csv", "may-tinh",
-            "tai-nghe.csv", "tai-nghe");
+            "tai-nghe.csv", "tai-nghe",
+            "chuot.csv", "chuot",
+            "ban-phim.csv", "ban-phim");
+
+    /** Danh mục DataSeeder không tạo (DB đã có dữ liệu thì seeder bỏ qua) – tạo khi nhập. */
+    private static final Map<String, Category> EXTRA_CATEGORIES = Map.of(
+            "chuot", new Category("Chuột", "chuot", "Chuột không dây, Bluetooth và gaming chính hãng.", 4),
+            "ban-phim", new Category("Bàn phím", "ban-phim", "Bàn phím cơ, không dây và gaming chính hãng.", 5));
 
     private final CategoryRepository categories;
     private final ProductRepository products;
@@ -80,8 +87,8 @@ public class CatalogImporter implements ApplicationRunner {
         int galleries = 0;
         for (var f : FILES.entrySet()) {
             Path csv = dir.resolve(f.getKey());
-            Category cat = categories.findBySlug(f.getValue()).orElse(null);
-            if (!Files.exists(csv) || cat == null) {
+            Category cat = Files.exists(csv) ? categoryFor(f.getValue()) : null;
+            if (cat == null) {
                 log.warn("Bỏ qua {}: thiếu file hoặc danh mục '{}'", csv, f.getValue());
                 continue;
             }
@@ -95,6 +102,13 @@ public class CatalogImporter implements ApplicationRunner {
             }
         }
         log.info("Nhập danh mục từ {}: thêm {} sản phẩm, cập nhật giá {}, bổ sung gallery ảnh {}, bỏ qua {}", dir, added, priced, galleries, skipped);
+    }
+
+    private Category categoryFor(String slug) {
+        return categories.findBySlug(slug).orElseGet(() -> {
+            Category t = EXTRA_CATEGORIES.get(slug);
+            return t == null ? null : categories.save(new Category(t.getName(), t.getSlug(), t.getSeoDescription(), t.getSortOrder()));
+        });
     }
 
     /** Chịu được việc chạy từ thư mục gốc hay từ backend: thử đường dẫn đã cấu hình rồi các vị trí thường gặp. */

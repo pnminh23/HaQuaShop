@@ -45,7 +45,7 @@ public class CartService {
     public CartDto addItem(CartKey key, AddItemRequest req) {
         Cart cart = find(key, true);
         ProductVariant v = variants.findById(req.variantId())
-                .filter(x -> x.getProduct().getStatus().isVisible())
+                .filter(x -> x.getProduct().isOnSaleToCustomers())
                 .orElseThrow(() -> ApiException.notFound("Sản phẩm không tồn tại"));
         CartItem item = cart.find(v.getId());
         int newQty = (item == null ? 0 : item.getQty()) + req.qty();
@@ -112,7 +112,7 @@ public class CartService {
     @Transactional
     public CartDto removeSelected(CartKey key) {
         Cart cart = find(key, true);
-        cart.getItems().removeIf(CartItem::isSelected);
+        cart.getItems().removeIf(i -> i.isSelected() && inShop(i));
         cart.touch();
         return toDto(cart, null);
     }
@@ -159,8 +159,7 @@ public class CartService {
     @Transactional(readOnly = true)
     public List<CartItem> selectedItems(CartKey key) {
         Cart cart = find(key, false);
-        return cart == null ? List.of()
-                : cart.getItems().stream().filter(i -> i.isSelected() && !i.isSavedForLater()).toList();
+        return cart == null ? List.of() : buying(cart);
     }
 
     @Transactional(readOnly = true)
@@ -174,7 +173,7 @@ public class CartService {
     public void clearPurchased(CartKey key) {
         Cart cart = find(key, false);
         if (cart != null) {
-            cart.getItems().removeIf(i -> i.isSelected() && !i.isSavedForLater());
+            cart.getItems().removeIf(i -> i.isSelected() && !i.isSavedForLater() && inShop(i));
             cart.setCoupon(null);
             cart.touch();
         }
@@ -221,8 +220,19 @@ public class CartService {
     }
 
     private long selectedSubtotal(Cart cart) {
-        return cart.getItems().stream().filter(i -> i.isSelected() && !i.isSavedForLater())
-                .mapToLong(i -> i.getVariant().getPrice() * i.getQty()).sum();
+        return buying(cart).stream().mapToLong(i -> i.getVariant().getPrice() * i.getQty()).sum();
+    }
+
+    /**
+     * Dòng thuộc danh mục đang ẩn vẫn nằm trong giỏ (hiện danh mục lại là có lại) nhưng không hiển thị,
+     * không tính tiền và không đặt mua được.
+     */
+    private static boolean inShop(CartItem i) {
+        return i.getVariant().getProduct().getCategory().isShown();
+    }
+
+    private static List<CartItem> buying(Cart cart) {
+        return cart.getItems().stream().filter(i -> i.isSelected() && !i.isSavedForLater() && inShop(i)).toList();
     }
 
     private CartDto emptyCart() {
@@ -230,14 +240,18 @@ public class CartService {
     }
 
     private CartDto toDto(Cart cart, String notice) {
-        List<CartItemDto> items = cart.getItems().stream().map(i -> {
+        List<CartItem> shown = cart.getItems().stream().filter(CartService::inShop).toList();
+        if (notice == null && shown.size() < cart.getItems().size()) {
+            notice = "Một số sản phẩm trong giỏ đang tạm ngừng bán nên đã được ẩn đi.";
+        }
+        List<CartItemDto> items = shown.stream().map(i -> {
             ProductVariant v = i.getVariant();
             return new CartItemDto(i.getId(), v.getId(), v.getProduct().getSlug(), v.getProduct().getName(), v.label(),
                     v.getProduct().mainImageUrl(), v.getPrice(), v.hasDiscount() ? v.getOriginalPrice() : 0, i.getQty(),
                     i.isSelected(), i.isSavedForLater(), v.getStock(), v.getPrice() * i.getQty());
         }).toList();
 
-        var chosen = cart.getItems().stream().filter(i -> i.isSelected() && !i.isSavedForLater()).toList();
+        var chosen = buying(cart);
         long subtotal = chosen.stream().mapToLong(i -> i.getVariant().getPrice() * i.getQty()).sum();
         long productDiscount = chosen.stream().filter(i -> i.getVariant().hasDiscount())
                 .mapToLong(i -> (i.getVariant().getOriginalPrice() - i.getVariant().getPrice()) * i.getQty()).sum();
@@ -256,7 +270,7 @@ public class CartService {
         }
         long ship = shipping.fee(ShippingMethod.STANDARD, subtotal);
         long total = subtotal - couponDiscount + ship;
-        int badge = cart.getItems().stream().filter(i -> !i.isSavedForLater()).mapToInt(CartItem::getQty).sum();
+        int badge = shown.stream().filter(i -> !i.isSavedForLater()).mapToInt(CartItem::getQty).sum();
         return new CartDto(cart.getSessionToken(), items,
                 new CartSummary(subtotal, productDiscount, couponCode, couponDiscount, ship, total, chosen.size()),
                 badge, notice);

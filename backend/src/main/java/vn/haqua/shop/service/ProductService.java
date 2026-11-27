@@ -18,6 +18,7 @@ import vn.haqua.shop.entity.Product;
 import vn.haqua.shop.enums.ProductStatus;
 import vn.haqua.shop.exception.ApiException;
 import vn.haqua.shop.mapper.ProductMapper;
+import vn.haqua.shop.repository.CategoryRepository;
 import vn.haqua.shop.repository.ProductRepository;
 import vn.haqua.shop.repository.ProductSpecifications;
 import vn.haqua.shop.repository.SlugRedirectRepository;
@@ -34,13 +35,15 @@ public class ProductService {
     private final ProductRepository products;
     private final SlugRedirectRepository redirects;
     private final ProductMapper mapper;
+    private final CategoryRepository categories;
 
     public ProductListResponse search(ProductFilter filter, int page, int size) {
         Pageable pageable = PageRequest.of(Math.max(page, 0), Math.min(Math.max(size, 1), 48),
                 ProductSpecifications.sort(filter.sort()));
-        var result = products.findAll(ProductSpecifications.from(filter), pageable);
+        var hidden = categories.hiddenIds();
+        var result = products.findAll(ProductSpecifications.from(filter, hidden), pageable);
         Map<String, Long> facets = new LinkedHashMap<>();
-        products.countByCategory(VISIBLE).forEach(r -> facets.put((String) r[0], (Long) r[1]));
+        products.countByCategory(VISIBLE, hidden).forEach(r -> facets.put((String) r[0], (Long) r[1]));
         return new ProductListResponse(PageDto.of(result, mapper::toCard), facets);
     }
 
@@ -48,13 +51,14 @@ public class ProductService {
         if (q == null || q.isBlank()) {
             return List.of();
         }
-        return products.findByStatusInAndNameUnaccentContaining(VISIBLE, SlugUtil.unaccent(q.trim()), PageRequest.of(0, 6))
+        return products.findByStatusInAndNameUnaccentContainingAndCategoryIdNotIn(VISIBLE, SlugUtil.unaccent(q.trim()),
+                        categories.hiddenIds(), PageRequest.of(0, 6))
                 .stream().map(p -> new SuggestDto(p.getSlug(), p.getName(), p.getMinPrice(), p.mainImageUrl())).toList();
     }
 
     /** Trả chi tiết; nếu slug cũ đã đổi, ném RedirectException để controller trả 301. */
     public ProductDetailDto detail(String slug) {
-        Product p = products.findBySlug(slug).filter(x -> x.getStatus().isVisible()).orElse(null);
+        Product p = products.findBySlug(slug).filter(Product::isOnSaleToCustomers).orElse(null);
         if (p == null) {
             redirects.findByOldSlug(slug).ifPresent(r -> {
                 throw new SlugMovedException(r.getNewSlug());
@@ -69,7 +73,8 @@ public class ProductService {
     }
 
     public List<ProductCardDto> featured(int limit) {
-        return products.findByStatusIn(VISIBLE, PageRequest.of(0, limit, ProductSpecifications.sort("popular")))
+        return products.findByStatusInAndCategoryIdNotIn(VISIBLE, categories.hiddenIds(),
+                        PageRequest.of(0, limit, ProductSpecifications.sort("popular")))
                 .stream().map(mapper::toCard).toList();
     }
 

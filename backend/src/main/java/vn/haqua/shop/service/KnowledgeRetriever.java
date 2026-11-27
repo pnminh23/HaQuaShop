@@ -16,6 +16,7 @@ import vn.haqua.shop.entity.KnowledgeSource;
 import vn.haqua.shop.entity.Product;
 import vn.haqua.shop.enums.ChatEnums.KnowledgeType;
 import vn.haqua.shop.enums.ProductStatus;
+import vn.haqua.shop.repository.CategoryRepository;
 import vn.haqua.shop.repository.KnowledgeSourceRepository;
 import vn.haqua.shop.repository.ProductRepository;
 import vn.haqua.shop.service.chat.ProductAdvisor;
@@ -29,6 +30,7 @@ public class KnowledgeRetriever {
 
     private final ProductRepository products;
     private final KnowledgeSourceRepository sources;
+    private final CategoryRepository categories;
 
     /** Số thẻ sản phẩm hiện dưới câu trả lời; khớp với lời dặn AI giới thiệu tối đa 3 máy theo thứ tự. */
     private static final int CARDS = 3;
@@ -46,8 +48,9 @@ public class KnowledgeRetriever {
         List<Product> cards = List.of();
 
         if (enabled.contains(KnowledgeType.CATALOG)) {
-            Map<Long, Product> byId = products.findByStatusIn(
-                            EnumSet.of(ProductStatus.ACTIVE, ProductStatus.OUT_OF_STOCK), Pageable.unpaged())
+            Map<Long, Product> byId = products.findByStatusInAndCategoryIdNotIn(
+                            EnumSet.of(ProductStatus.ACTIVE, ProductStatus.OUT_OF_STOCK), categories.hiddenIds(),
+                            Pageable.unpaged())
                     .stream().collect(Collectors.toMap(Product::getId, p -> p, (a, b) -> a, LinkedHashMap::new));
             List<Candidate> catalog = byId.values().stream().map(KnowledgeRetriever::candidate).toList();
             ProductAdvisor.Advice advice = ProductAdvisor.advise(userMessages, catalog);

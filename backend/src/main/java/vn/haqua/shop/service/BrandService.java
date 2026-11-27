@@ -15,6 +15,7 @@ import vn.haqua.shop.entity.Brand;
 import vn.haqua.shop.enums.ProductStatus;
 import vn.haqua.shop.exception.ApiException;
 import vn.haqua.shop.repository.BrandRepository;
+import vn.haqua.shop.repository.CategoryRepository;
 import vn.haqua.shop.repository.ProductRepository;
 import vn.haqua.shop.util.SlugUtil;
 
@@ -27,6 +28,7 @@ public class BrandService {
 
     private final BrandRepository brands;
     private final ProductRepository products;
+    private final CategoryRepository categories;
 
     /** Danh sách thương hiệu; tự bổ sung các thương hiệu đã có sẵn trên sản phẩm cũ nhưng chưa có trong bảng. */
     @Transactional
@@ -60,6 +62,9 @@ public class BrandService {
     /** Các hãng máy tính hiện trên menu cửa hàng. */
     @Transactional(readOnly = true)
     public List<MenuBrandDto> computerMenu() {
+        if (categories.findBySlug(COMPUTER_CATEGORY).filter(c -> !c.isShown()).isPresent()) {
+            return List.of(); // danh mục máy tính đang ẩn thì menu hãng máy tính cũng ẩn
+        }
         return brands.findByComputerBrandTrue().stream()
                 .sorted(Comparator.comparingInt(BrandService::order).thenComparing(Brand::getName, String.CASE_INSENSITIVE_ORDER))
                 .map(b -> new MenuBrandDto(b.getName(), b.getSlug()))
